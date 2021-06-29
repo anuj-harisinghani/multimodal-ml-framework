@@ -30,6 +30,6 @@ features: {
 }
 # features referenced by feature sets (current way)
 feature_sets: {
-  "eye": "Eye",  
-  "lang": "Language"
+  "eye1": "Eye",  
+  "lang1": "Language"
 }

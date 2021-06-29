@@ -10,7 +10,9 @@ pip install --upgrade numpy
 pip install matplotlib==3.3.2
 pip install seaborn==0.11.1
 pip install --upgrade PyYAML
+pip install PyCap
+pip install nltk
 
 # to write all installed packages in the environment into a file:
-pip freeze > ~/CANARY-NEW/requirements.txt
+pip freeze > ~/multimodal-ml-framework/requirements.txt
 

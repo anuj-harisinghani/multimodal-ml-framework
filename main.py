@@ -10,8 +10,16 @@ def main():
     mode = params["mode"]
     tasks = params["tasks"]
     classifiers = params["classifiers"]
+    output_folder = params["output_folder"]  # how do I send this to PID extraction?
 
-    tasks_data = DataHandler.load_data(tasks, mode)
+    # PID extraction option 1: call get_list_of_pids here with the PID_extraction_method, save pid list somewhere, then load_data does its work
+    # this probably won't work since we have to specify the modalities and task for each task, which is handled inside DataHandler
+    # extraction_method = params["PID_extraction_method"]
+    # DataHandler.get_list_of_pids(mode=mode, modalities={"idk":"something?"}, task="choose a task from tasks", extraction_method=extraction_method)
+
+    # PID extraction option 2: send extraction method through load_data
+    extraction_method = params["PID_extraction_method"]
+    tasks_data = DataHandler(mode=mode, extraction_method=extraction_method, output_folder=output_folder).load_data(tasks=tasks)
     models = ModelsHandler.get_models(classifiers)
 
     results = []

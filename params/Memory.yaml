@@ -23,5 +23,6 @@ features: {
 # }
 
 feature_sets: {
-  audio: "Audio", text: "Text"
+  "lang1": "Audio", 
+  "lang2": "Text"
 }

@@ -17,5 +17,5 @@ features: {
 }
 # features referenced by feature sets (current way)
 feature_sets: {
-  "eye": "ET_Basic"
+  "eye1": "ET_Basic"
 }
