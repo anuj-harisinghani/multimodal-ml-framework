@@ -1,4 +1,5 @@
 from classes.cv.CrossValidator import CrossValidator
+from classes.handlers.ParamsHandler import ParamsHandler
 
 '''
 Abstract class Trainer

@@ -1,5 +1,4 @@
-from classes.cv.CrossValidator import CrossValidator
-from classes.cv.Trainer import Trainer
+from classes.Trainer.Trainer import Trainer
 
 
 class SingleModelTrainer(Trainer):

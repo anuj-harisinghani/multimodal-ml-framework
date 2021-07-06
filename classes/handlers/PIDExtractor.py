@@ -83,10 +83,6 @@ class PIDExtractor:
         pids = list(np.intersect1d(pids_mod[0], pids_diag))
 
         # saving PIDs to a file
-        # not using pickle here since we should be able to view which PIDs have been utilized in an experiment
-        '''
-        make it csv here
-        '''
         pd.DataFrame(pids, columns=['interview']).to_csv(pid_file_path)
 
         # with open(pid_file_path, 'w') as f:
