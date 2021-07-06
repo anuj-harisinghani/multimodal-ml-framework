@@ -7,7 +7,7 @@ mode: "single_tasks"
 classifiers: [ "lr", "rf" ]
 
 # Implemented: "cookie_theft", "pupil_calib", "memory", "reading"
-tasks: [ "Memory", "PupilCalib" ]
+tasks: [ "Memory", "PupilCalib", "CookieTheft", "Reading" ]
 
 # output folder: specify which folder you'd like the results to go to (will be sent under ../results/)
 output_folder: "dummy_result1"

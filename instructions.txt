@@ -12,6 +12,7 @@ pip install seaborn==0.11.1
 pip install --upgrade PyYAML
 pip install PyCap
 pip install nltk
+pip install sklearn
 
 # to write all installed packages in the environment into a file:
 pip freeze > ~/multimodal-ml-framework/requirements.txt
