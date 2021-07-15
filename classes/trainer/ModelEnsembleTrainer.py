@@ -1,7 +1,7 @@
-from classes.Trainer.Trainer import Trainer
+from classes.trainer.Trainer import Trainer
 
 
-class SingleModelTrainer(Trainer):
+class ModelEnsembleTrainer(Trainer):
     def __init__(self):
         super().__init__()
 

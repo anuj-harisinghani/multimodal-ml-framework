@@ -1,13 +1,20 @@
-class DataSplitterFactory:
+from classes.data_splitters.DataSplitter import DataSplitter
+from classes.data_splitters.SingleTaskDataSplitter import SingleTaskDataSplitter
+from classes.data_splitters.TaskFusionDataSplitter import TaskFusionDataSplitter
+from classes.data_splitters.ModelEnsembleDataSplitter import ModelEnsembleDataSplitter
 
+
+class DataSplitterFactory:
     def __init__(self):
         self.__data_splitters = {
-            "single_task": SingleTaskDataSplitter,
-            "task_fusion": TaskFusionDataSplitter
+            "single_tasks": SingleTaskDataSplitter(),
+            "task_fusion": TaskFusionDataSplitter(),
+            "model_ensemble": ModelEnsembleDataSplitter()
         }
 
-    def get(self, data_splitter_type: str) -> DataSplitter:
-        if not data_splitter_type in self.__data_splitters.keys():
+    def get(self, mode: str) -> DataSplitter:
+        if mode not in self.__data_splitters.keys():
             raise ValueError("Data splitter '{}' not supported! Supported splitters are: {}"
-                             .format(data_splitter_type, self.__data_splitters.keys()))
-        return self.__data_splitters[data_splitter_type]()
+                             .format(mode, self.__data_splitters.keys()))
+
+        return self.__data_splitters[mode]

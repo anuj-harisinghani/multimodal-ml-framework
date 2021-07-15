@@ -1,5 +1,11 @@
 seeds: 10
 
+# number of folds to split the data into
+folds: 10
+
+# RandomSeed
+random_seed: 0
+
 # Implemented: "single_tasks", "fusion", "ensemble"
 mode: "single_tasks"
 

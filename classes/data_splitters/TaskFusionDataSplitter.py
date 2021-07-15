@@ -1,10 +1,12 @@
 from classes.data_splitters.DataSplitter import DataSplitter
+
 from typing import List
 import pandas as pd
 
-class DataSplitterSingleTask(DataSplitter):
+
+class TaskFusionDataSplitter(DataSplitter):
     def __init__(self):
         super().__init__()
 
-    def make_splits(data: pd.DataFrame, folds: list) -> List:
+    def make_splits(self, data: dict, nfolds: int) -> List:
         pass
