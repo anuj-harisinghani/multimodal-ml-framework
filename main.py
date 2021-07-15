@@ -11,14 +11,14 @@ def main():
     tasks = params["tasks"]
     classifiers = params["classifiers"]
     output_folder = params["output_folder"]  # how do I send this to PID extraction?
-
     extraction_method = params["PID_extraction_method"]
+
     tasks_data = DataHandler(mode=mode, extraction_method=extraction_method, output_folder=output_folder).load_data(tasks=tasks)
     models = ModelsHandler.get_models(classifiers)
 
-    results = []
-
-    results = CrossValidator.cross_validate(mode, tasks_data)
+    # results = []
+    cv = CrossValidator(mode)
+    results = cv.cross_validate(tasks_data=tasks_data)
 
     for seed in range(params["seeds"]):
         print("\nProcessing seed {}\n".format(seed))

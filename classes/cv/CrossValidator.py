@@ -11,12 +11,13 @@ class CrossValidator(ABC):
     def __init__(self, mode: str):
         self.__splitter = DataSplitterFactory().get(mode)
         self.__trainer = TrainersFactory().get(mode)
+        self.mode = mode
         pass
 
     # @staticmethod
     # def cross_validate(self, m: Union[Model, List], t: Union[Task, List]) -> Dict:
     #     pass
-    def cross_validate(self, mode: str, tasks_data: dict) -> dict:
+    def cross_validate(self, tasks_data: dict) -> dict:
         params = ParamsHandler.load_parameters('settings')
         nfolds = params["folds"]
         for task in tasks_data.keys():

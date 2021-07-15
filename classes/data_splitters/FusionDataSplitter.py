@@ -1,11 +1,13 @@
 from classes.data_splitters.DataSplitter import DataSplitter
+from classes.handlers.PIDExtractor import PIDExtractor
 
 from typing import List
 import numpy as np
 from sklearn.model_selection import StratifiedKFold
 
 
-class SingleTaskDataSplitter(DataSplitter):
+
+class FusionDataSplitter(DataSplitter):
     def __init__(self):
         super().__init__()
 
@@ -15,6 +17,8 @@ class SingleTaskDataSplitter(DataSplitter):
         labels = np.array(data['labels'])
         fold_data = []
 
+        # option 1: Superset PIDs
+        Superset_IDs = PIDExtractor()
         folds = StratifiedKFold(n_splits=nfolds, shuffle=True, random_state=self.random_seed).split(x, y, groups=labels)
 
         for train_index, test_index in folds:
@@ -28,9 +32,3 @@ class SingleTaskDataSplitter(DataSplitter):
             fold_data.append(fold)
 
         return fold_data
-
-
-
-
-
-

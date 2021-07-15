@@ -1,6 +1,6 @@
 from classes.data_splitters.DataSplitter import DataSplitter
 from classes.data_splitters.SingleTaskDataSplitter import SingleTaskDataSplitter
-from classes.data_splitters.TaskFusionDataSplitter import TaskFusionDataSplitter
+from classes.data_splitters.FusionDataSplitter import FusionDataSplitter
 from classes.data_splitters.ModelEnsembleDataSplitter import ModelEnsembleDataSplitter
 
 
@@ -8,7 +8,7 @@ class DataSplitterFactory:
     def __init__(self):
         self.__data_splitters = {
             "single_tasks": SingleTaskDataSplitter(),
-            "task_fusion": TaskFusionDataSplitter(),
+            "task_fusion": FusionDataSplitter(),
             "model_ensemble": ModelEnsembleDataSplitter()
         }
 

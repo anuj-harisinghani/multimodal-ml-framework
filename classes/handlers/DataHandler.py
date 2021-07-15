@@ -14,8 +14,8 @@ class DataHandler:
     def __init__(self, mode: str, extraction_method: str, output_folder: str):
         self.extraction_method = extraction_method
         self.output_folder = output_folder
-        self.pid_file_path = os.path.join('results', output_folder, extraction_method + '_pids.csv')
         self.mode = mode
+        self.pid_file_path = None
 
 
     def load_data(self, tasks: List) -> dict:
@@ -38,6 +38,7 @@ class DataHandler:
 
             # new way: calling pid extraction here, saving pids to a file, then making get_data get the pids from the file
             # self.get_list_of_pids(self.mode, task, modalities, self.extraction_method, self.pid_file_path)
+            self.pid_file_path = os.path.join('results', self.output_folder, self.extraction_method + '_' + task + '_pids.csv')
             PIDExtractor.get_list_of_pids(self.mode, task, modalities, self.extraction_method, self.pid_file_path)
             # pid_file_path = os.path.join('results', output_folder, extraction_method + '_pids.txt')
             # pids = get_list_of_pids(mode, task, modalities, extraction_method, pid_file_path)
