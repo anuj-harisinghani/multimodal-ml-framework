@@ -6,22 +6,27 @@ from classes.handlers.ParamsHandler import ParamsHandler
 
 
 class PIDExtractor:
-    def __init__(self):
-        pass
+    def __init__(self, mode: str, extraction_method: str, output_folder: str, pid_file_paths: dict):
+        self.mode = mode
+        self.extraction_method = extraction_method
+        self.output_folder = output_folder
+        self.pid_file_paths = pid_file_paths
+        self.Superset_IDs = []
 
-    @staticmethod
-    def get_list_of_pids(mode: str, task: str, modalities: dict, extraction_method: str, pid_file_path: str):
+    # find a better name for inner_get_list_of_pids
+    def inner_get_list_of_pids(self, task: str) -> list:
+
         """
-        :param mode: mode specifies how the PIDs should be handled (single = intersect everything, fusion = union of modality level PIDs, intersect within modality)
-        :param modalities: which modalities (based on the task) would influence selected PIDs
         :param task: the task for which PIDs are required
-        :param extraction_method: the method by which PIDs should be extracted, specified by user in the "settings" file
-        :param pid_file_path: the path at which the list of PIDs will be created
         :return: list of PIDs that satisfy the task and modality constraints
         """
 
-        if extraction_method == 'default':
+        # get modalities of the particular task
+        modalities = ParamsHandler.load_parameters(task)['modalities']
+
+        if self.extraction_method == 'default':
             pass
+
         data_path = os.path.join('datasets', 'csv_tables')
         database = ParamsHandler.load_parameters('database')
         modality_wise_datasets = database['modality_wise_datasets']
@@ -70,23 +75,41 @@ class PIDExtractor:
                 pids_mod.append(pids_multimodal)
 
         # for single task mode, we require an intersection of all PIDs, from all modalities
-        if mode == 'single_tasks':
+        if self.mode == 'single_tasks':
             while len(pids_mod) > 1:
                 pids_mod = [np.intersect1d(pids_mod[i], pids_mod[i + 1]) for i in range(len(pids_mod) - 1)]
 
         # for fusion mode, we require a union of PIDs taken from each modality (which were intersected internally within a modality)
-        elif mode == 'fusion':
+        elif self.mode == 'fusion':
             while len(pids_mod) > 1:
                 pids_mod = [np.union1d(pids_mod[i], pids_mod[i + 1]) for i in range(len(pids_mod) - 1)]
 
         # intersecting the final list of PIDs with diagnosis, to get the PIDs with valid diagnosis
         pids = list(np.intersect1d(pids_mod[0], pids_diag))
 
-        # saving PIDs to a file
-        pd.DataFrame(pids, columns=['interview']).to_csv(pid_file_path)
-
-        # with open(pid_file_path, 'w') as f:
-        #     for pid in pids:
-        #         f.write(pid + '\n')
-
         return pids
+
+    def get_list_of_pids(self, tasks: list):
+        Superset_IDs = []
+        for task in tasks:
+            task_params = ParamsHandler.load_parameters(task)
+            modalities = task_params['modalities']
+
+            # getting pids and saving them at pid_file_path
+            pid_file_path = self.pid_file_paths[task]
+            pids = self.inner_get_list_of_pids(task=task)
+            pd.DataFrame(pids, columns=['interview']).to_csv(pid_file_path)
+
+            Superset_IDs.append(pids)
+
+        if self.mode == 'fusion':
+            # getting superset_ids for fusion
+            while (len(Superset_IDs)) > 1:
+                Superset_IDs = [np.union1d(Superset_IDs[i], Superset_IDs[i + 1]) for i in range(len(Superset_IDs) - 1)]
+
+            self.Superset_IDs = Superset_IDs[0]
+            super_pids_file_path = os.path.join('results', self.output_folder, self.extraction_method + '_super_pids.csv')
+            print('Superset_IDs created!')
+            pd.DataFrame(self.Superset_IDs, columns=['interview']).to_csv(super_pids_file_path)
+
+

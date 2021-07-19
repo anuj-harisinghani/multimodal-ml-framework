@@ -5,6 +5,7 @@ from classes.factories.DataSplitterFactory import DataSplitterFactory
 from classes.factories.TrainersFactory import TrainersFactory
 
 from classes.handlers.ParamsHandler import ParamsHandler
+from classes.handlers.PIDExtractor import PIDExtractor
 
 
 class CrossValidator(ABC):
@@ -20,9 +21,14 @@ class CrossValidator(ABC):
     def cross_validate(self, tasks_data: dict) -> dict:
         params = ParamsHandler.load_parameters('settings')
         nfolds = params["folds"]
-        for task in tasks_data.keys():
-            for modality, modality_data in tasks_data[task].items():
-                splits = self.__splitter.make_splits(data=modality_data, nfolds=nfolds)
-                trained_model = self.__trainer.train(splits)
+
+        if self.mode == 'single_tasks':
+            for task in tasks_data.keys():
+                for modality, modality_data in tasks_data[task].items():
+                    splits = self.__splitter.make_splits(data=modality_data, nfolds=nfolds)
+                    trained_model = self.__trainer.train(splits)
+
+        elif self.mode == 'fusion':
+            splits = self.__splitter.make_splits(data=tasks_data, nfolds=nfolds)
 
         return {}

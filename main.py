@@ -2,6 +2,9 @@ from classes.cv.CrossValidator import CrossValidator
 from classes.handlers.DataHandler import DataHandler
 from classes.handlers.ModelsHandler import ModelsHandler
 from classes.handlers.ParamsHandler import ParamsHandler
+from classes.handlers.PIDExtractor import PIDExtractor
+
+import os
 
 
 def main():
@@ -10,13 +13,15 @@ def main():
     mode = params["mode"]
     tasks = params["tasks"]
     classifiers = params["classifiers"]
-    output_folder = params["output_folder"]  # how do I send this to PID extraction?
+
+    output_folder = params["output_folder"]
     extraction_method = params["PID_extraction_method"]
 
-    tasks_data = DataHandler(mode=mode, extraction_method=extraction_method, output_folder=output_folder).load_data(tasks=tasks)
+    # getting the data from DataHandler and models from ModelsHandler
+    tasks_data = DataHandler(mode=mode, output_folder=output_folder, extraction_method=extraction_method).load_data(tasks=tasks)
     models = ModelsHandler.get_models(classifiers)
 
-    # results = []
+    results = []
     cv = CrossValidator(mode)
     results = cv.cross_validate(tasks_data=tasks_data)
 

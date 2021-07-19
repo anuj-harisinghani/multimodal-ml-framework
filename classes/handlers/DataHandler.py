@@ -11,16 +11,70 @@ from classes.handlers.PIDExtractor import PIDExtractor
 
 class DataHandler:
 
-    def __init__(self, mode: str, extraction_method: str, output_folder: str):
-        self.extraction_method = extraction_method
-        self.output_folder = output_folder
+    def __init__(self, mode: str, output_folder: str, extraction_method: str):
         self.mode = mode
-        self.pid_file_path = None
-
+        self.output_folder = output_folder
+        self.extraction_method = extraction_method
+        self.pid_file_paths = None
 
     def load_data(self, tasks: List) -> dict:
-        # tasks_data = {task: None for task in tasks}
+        tasks_data = {task: None for task in tasks}
+        self.pid_file_paths = {task: os.path.join('results', self.output_folder, self.extraction_method + '_' + task + '_pids.csv')
+                               for task in tasks}
+        PIDExtractor(mode=self.mode, extraction_method=self.extraction_method, output_folder = self.output_folder,
+                     pid_file_paths=self.pid_file_paths).get_list_of_pids(tasks=tasks)
 
+        for task in tasks:
+            print(task)
+            params = ParamsHandler.load_parameters(task)
+            modalities = params['modalities']
+            features = params['features']
+            feature_set = params['feature_sets']
+
+            modality_data = {modality: None for modality in modalities}
+            for modality in modalities:
+                modality_data[modality] = self.get_data(task, modality, feature_set, self.pid_file_paths[task])
+                tasks_data[task] = modality_data
+
+        '''
+        tasks_data = {task: None for task in tasks}
+        if self.mode == 'single_tasks':
+            for task in tasks:
+                print(task)
+                params = ParamsHandler.load_parameters(task)
+                modalities = params['modalities']
+                features = params['features']
+                feature_set = params['feature_sets']
+
+                self.pid_file_path = os.path.join('results', self.output_folder, self.extraction_method + '_' + task + '_pids.txt')
+                PIDExtractor(mode=self.mode, pid_file_path=self.pid_file_path).get_list_of_pids(tasks=task)
+
+                modality_data = {modality: None for modality in modalities}
+                for modality in modalities:
+                    modality_data[modality] = self.get_data(task, modality, feature_set, self.pid_file_path)
+                    tasks_data[task] = modality_data
+
+        elif self.mode == 'fusion':
+            tasks_data = {task: None for task in tasks}
+
+            self.pid_file_path = os.path.join('results', self.output_folder, self.mode + '_' + self.extraction_method + '_pids.txt')
+            PIDExtractor(mode=self.mode, pid_file_path=self.pid_file_path).get_list_of_pids(tasks=tasks)
+
+            for task in tasks:
+                print(task)
+                params = ParamsHandler.load_parameters(task)
+                modalities = params['modalities']
+                features = params['features']
+                feature_set = params['feature_sets']
+
+                modality_data = {modality: None for modality in modalities}
+                for modality in modalities:
+                    modality_data[modality] = self.get_data(task, modality, feature_set, self.pid_file_path)
+                    tasks_data[task] = modality_data
+        '''
+
+
+        '''
         tasks_data = {task: None for task in tasks}
         for task in tasks:
             print(task)
@@ -36,10 +90,7 @@ class DataHandler:
             # tasks_data = {task: {modality: None for modality in modalities} for task in tasks}
             modality_data = {modality: None for modality in modalities}
 
-            # new way: calling pid extraction here, saving pids to a file, then making get_data get the pids from the file
-            # self.get_list_of_pids(self.mode, task, modalities, self.extraction_method, self.pid_file_path)
-            self.pid_file_path = os.path.join('results', self.output_folder, self.extraction_method + '_' + task + '_pids.csv')
-            PIDExtractor.get_list_of_pids(self.mode, task, modalities, self.extraction_method, self.pid_file_path)
+
             # pid_file_path = os.path.join('results', output_folder, extraction_method + '_pids.txt')
             # pids = get_list_of_pids(mode, task, modalities, extraction_method, pid_file_path)
             for modality in modalities:
@@ -56,7 +107,7 @@ class DataHandler:
         # if self.mode == "ensemble":
         #     pass
 
-        # probably should just return X, y, labels here and let cross_validator work with it
+        '''
         return tasks_data
 
 

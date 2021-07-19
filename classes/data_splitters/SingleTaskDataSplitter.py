@@ -18,13 +18,14 @@ class SingleTaskDataSplitter(DataSplitter):
         folds = StratifiedKFold(n_splits=nfolds, shuffle=True, random_state=self.random_seed).split(x, y, groups=labels)
 
         for train_index, test_index in folds:
-            fold = {}
-            fold['x_train'] = x.values[train_index]
-            fold['y_train'] = y.values[train_index]
-            fold['x_test'] = x.values[test_index]
-            fold['y_test'] = y.values[test_index]
-            fold['train_labels'] = labels[train_index]
-            fold['test_labels'] = labels[test_index]
+            fold = {
+                'x_train': x.values[train_index],
+                'y_train': y.values[train_index],
+                'x_test': x.values[test_index],
+                'y_test': y.values[test_index],
+                'train_labels': labels[train_index],
+                'test_labels': labels[test_index]
+            }
             fold_data.append(fold)
 
         return fold_data

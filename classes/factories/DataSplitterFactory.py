@@ -8,8 +8,8 @@ class DataSplitterFactory:
     def __init__(self):
         self.__data_splitters = {
             "single_tasks": SingleTaskDataSplitter(),
-            "task_fusion": FusionDataSplitter(),
-            "model_ensemble": ModelEnsembleDataSplitter()
+            "fusion": FusionDataSplitter(),
+            "ensemble": ModelEnsembleDataSplitter()
         }
 
     def get(self, mode: str) -> DataSplitter:
