@@ -28,7 +28,11 @@ class CrossValidator(ABC):
                     splits = self.__splitter.make_splits(data=modality_data, nfolds=nfolds)
                     trained_model = self.__trainer.train(splits)
 
+        # currently this is the same as single_tasks, checking if it would make a difference to keep them separate or not
         elif self.mode == 'fusion':
-            splits = self.__splitter.make_splits(data=tasks_data, nfolds=nfolds)
+            for task in tasks_data.keys():
+                for modality, modality_data in tasks_data[task].items():
+                    splits = self.__splitter.make_splits(data=modality_data, nfolds=nfolds)
+                    trained_model = self.__trainer.train(splits)
 
         return {}
