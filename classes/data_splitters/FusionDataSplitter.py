@@ -44,7 +44,7 @@ class FusionDataSplitter(DataSplitter):
         super_pids_file_path = os.path.join('results', output_folder, extraction_method + '_super_pids.csv')
         Superset_IDs = list(pd.read_csv(super_pids_file_path)['interview'])
 
-        
+
         # option 2: Split an intersection of pids across tasks, then split the out-of-intersection pids, then merge them equally
         # option 3: Split all tasks pids seperately, then merge them equally
 
