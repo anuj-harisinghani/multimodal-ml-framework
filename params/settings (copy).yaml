@@ -13,13 +13,13 @@ mode: "single_tasks"
 classifiers: [ "lr", "rf" ]
 
 # Implemented: "cookie_theft", "pupil_calib", "memory", "reading"
-tasks: [ "CookieTheft"]
+tasks: [ "Memory", "PupilCalib", "CookieTheft", "Reading" ]
 
 # output folder: specify which folder you'd like the results to go to (will be sent under ../results/)
 # if nothing is specified, then a default name is chosen based on timestamp
 ## default folder name would be mode_task_name_classifiers_timestamp
 ## copy this file over in the results after results are generated.
-output_folder: "dummy_result1"
+output_folder: "dummy_result1" + _timestamp
 
 # any conditions on PID list extraction
 # options can be "default",

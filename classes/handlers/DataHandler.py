@@ -19,10 +19,19 @@ class DataHandler:
 
     def load_data(self, tasks: List) -> dict:
         tasks_data = {task: None for task in tasks}
-        self.pid_file_paths = {task: os.path.join('results', self.output_folder, self.extraction_method + '_' + task + '_pids.csv')
-                               for task in tasks}
-        PIDExtractor(mode=self.mode, extraction_method=self.extraction_method, output_folder = self.output_folder,
+        # put pid file path in assets
+        # the name should contain the mode, method, other info for that run
+
+        '''
+        create a master list of pids with tasks/modalities mentioned in 1/0 bool format, in a separate script - create this separately somewhere outside of the framework
+        '''
+        self.pid_file_paths = {task: os.path.join('assets', 'PIDs', # self.output_folder,
+                                                  self.mode + '_' + self.extraction_method + '_' + task + '_pids.csv') for task in tasks}
+        # get the PID_Reuse flag from settings.yaml, then do an if-else here for PIDExtractor.
+        # add support for using custom pids, use the flag
+        PIDExtractor(mode=self.mode, extraction_method=self.extraction_method, output_folder=self.output_folder,
                      pid_file_paths=self.pid_file_paths).get_list_of_pids(tasks=tasks)
+        # add support for custom conditions (let's say something specific to a set of participants) - inside PID Extractor
 
         for task in tasks:
             print(task)
@@ -118,8 +127,6 @@ class DataHandler:
         data_path = os.path.join('datasets', 'csv_tables')
 
         # get pids from a saved file, which was created by get_list_of_pids based on the conditions given to it
-        # with open(pid_file_path, 'r') as f:
-        #     pids = [line.rstrip('\n') for line in f]
         pids = pd.read_csv(pid_file_path)
 
         # initializing the dataset as the list of PIDs
@@ -223,7 +230,7 @@ class DataHandler:
         y = dataset['diagnosis'] != 'HC'
 
         # X
-        drop = ['interview', 'diagnosis']
+        drop = ['interview', 'diagnosis', 'Unnamed: 0_x', 'Unnamed: 0_y']
         x = dataset.drop(drop, axis=1, errors='ignore')
         x = x.apply(pd.to_numeric, errors='ignore')
 

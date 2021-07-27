@@ -22,7 +22,7 @@ def main():
     models = ModelsHandler.get_models(classifiers)
 
     results = []
-    cv = CrossValidator(mode)
+    cv = CrossValidator(mode, models)
     results = cv.cross_validate(tasks_data=tasks_data)
 
     for seed in range(params["seeds"]):
