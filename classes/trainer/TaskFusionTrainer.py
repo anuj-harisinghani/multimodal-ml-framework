@@ -161,7 +161,7 @@ class TaskFusionTrainer(Trainer):
 
         return self
 
-    def train(self, splits: list, clf: str, x_columns: list, feature_set: str):
+    def train(self, splits: list, clf: str, x_columns: list, feature_set: str, feature_importance: bool):
         self.splits = splits
         self.clf = clf
 

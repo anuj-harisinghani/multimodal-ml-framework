@@ -67,17 +67,16 @@ class SingleModelTrainer(Trainer):
         self.preds[method] = pred
         self.pred_probs[method] = pred_prob
 
-    # def save_feature_importance(self, x, y, model_name, model, feature_names):
-    #     if model is None:
-    #         X_fs, feature_names = self.do_feature_selection_all(x.values, y,
-    #                                                             feature_names)
-    #         model = get_classifier(model_name)
-    #         model.fit(X_fs, y)
-    #         X = X_fs
+    # def save_feature_importance(self, x, y, clf, feature_names):
+    #     if clf is None:
+    #         x_fs, feature_names = self.do_feature_selection_all(x.values, y, feature_names)
+    #         model = ModelsHandler.get_model(clf)
+    #         model.fit(x_fs, y)
+    #         X = x_fs
     #     feature_scores = get_feature_scores(model_name, model, feature_names, x)
     #     return feature_scores
 
-    def train(self, splits: list, clf: str, x_columns: list, feature_set: str):
+    def train(self, splits: list, clf: str, x_columns: list, feature_set: str, feature_importance: bool):
         self.splits = splits
         self.clf = clf
 
@@ -93,7 +92,10 @@ class SingleModelTrainer(Trainer):
         feature_scores_fold = []
         k_range = None
 
+        print("Model %s" % self.clf)
+        print("=========================")
         for idx, fold in enumerate(self.splits):
+            print("Processing fold: %i" % idx)
             x_train, y_train = fold['x_train'], fold['y_train'].ravel()
             x_test, y_test = fold['x_test'], fold['y_test'].ravel()
             labels_train, labels_test = fold['train_labels'], fold['test_labels']
@@ -136,15 +138,13 @@ class SingleModelTrainer(Trainer):
             specificity.append(spec_scores)
 
             # if feature_importance:
-            #     feature_scores_fold.append(self.save_feature_importance(X=X_train_fs,
-            #                                                             y=None, model_name=model, model=clf,
-            #                                                             feature_names=selected_feature_names))
+            #     feature_scores_fold.append(self.save_feature_importance(x=x_train_fs, y=None, clf=model, feature_names=selected_feature_names))
 
         self.save_results(method=self.method, acc=acc, fms=fms, roc=roc,
                           precision=precision, recall=recall, specificity=specificity,
                           pred=pred, pred_prob=pred_prob, k_range=k_range)
 
-        # self.feature_scores_fold[self.method] = feature_scores_fold
+        self.feature_scores_fold[self.method] = feature_scores_fold
 
         # if feature_importance:  # get feature importance from the whole data
         #     self.feature_scores_all[self.method] = \

@@ -20,7 +20,7 @@ class Trainer:
         self.feature_set = None
 
 
-    def train(self, folds: list, model: object, x_columns: list, feature_set: str):
+    def train(self, splits: list, clf: str, x_columns: list, feature_set: str, feature_importance: bool):
         pass
 
     def calculate_task_fusion_results(self, data, model):

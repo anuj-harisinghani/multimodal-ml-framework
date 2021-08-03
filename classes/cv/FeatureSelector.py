@@ -1,11 +1,10 @@
-import copy
-
 from classes.handlers.ParamsHandler import ParamsHandler
 
 from typing import List
 import pandas as pd
 from scipy import stats
 import numpy as np
+import copy
 
 '''
 to be called inside trainers
@@ -68,7 +67,7 @@ class FeatureSelector:
     # function to get list of features to keep based on pearson correlation over a certain threshold
     def get_top_correlation_features_by_cutoff(self, x: np.ndarray, y: np.ndarray, method: str = 'pearson'):
         if method == 'pearson':
-            correlated_to_outcome = [column for column in range(x.shape[1]) if abs(stats.pearsonr(y, x[:, column])[0]) > self.fs_outcome]
+            correlated_to_outcome = [column for column in range(x.shape[1]) if abs(stats.pearsonr(y, np.nan_to_num(x[:, column]))[0]) > self.fs_outcome]
             return correlated_to_outcome
         elif method == 'pointbiserial':
             return [column for column in range(x.shape[1]) if abs(stats.pointbiserialr(y, x[:, column])[0]) > self.fs_outcome]

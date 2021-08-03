@@ -1,10 +1,9 @@
 from classes.cv.CrossValidator import CrossValidator
 from classes.handlers.DataHandler import DataHandler
-from classes.handlers.ModelsHandler import ModelsHandler
 from classes.handlers.ParamsHandler import ParamsHandler
-from classes.handlers.PIDExtractor import PIDExtractor
 
-import os
+import warnings
+warnings.filterwarnings("ignore")
 
 
 def main():
@@ -21,9 +20,8 @@ def main():
     tasks_data = DataHandler(mode=mode, output_folder=output_folder, extraction_method=extraction_method).load_data(tasks=tasks)
     # models = ModelsHandler.get_models(classifiers)
 
-    results = []
     cv = CrossValidator(mode, classifiers)
-    results = cv.cross_validate(tasks_data=tasks_data)
+    cv.cross_validate(tasks_data=tasks_data)
 
     # for seed in range(params["seeds"]):
     #     print("\nProcessing seed {}\n".format(seed))

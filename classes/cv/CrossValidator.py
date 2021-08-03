@@ -25,25 +25,30 @@ class CrossValidator(ABC):
         nfolds = params["folds"]
         new_features_results_prefix = 'results_new_features'
         task_fusion_prefix = 'results_task_fusion'
+        feature_importance = False
 
         # running trainer for each of the tasks
         if self.mode == 'single_tasks':
             for task in tasks_data.keys():
+                print("\nTask %s" % task)
+                print("---------------")
                 task_params = ParamsHandler.load_parameters(task)
                 feature_sets = task_params['features']
 
                 # running trainer for each modality separately
                 for modality, modality_data in tasks_data[task].items():
-                    modality_feature_set = feature_sets[modality]
+                    modality_feature_set = list(feature_sets[modality].keys())[0]
 
                     # splitting data then training the models
                     splits, x_columns = self.__splitter.make_splits(data=modality_data, nfolds=nfolds)
-                    trained_models = {clf: self.__trainer.train(splits, clf, x_columns, modality_feature_set) for clf in self.classifiers}
+                    trained_models = {clf: self.__trainer.train(splits=splits, clf=clf,
+                                                                x_columns=x_columns, feature_set=modality_feature_set,
+                                                                feature_importance=False) for clf in self.classifiers}
 
                     # saving results
                     CrossValidator.save_results(trained_models=trained_models, feature_set=modality_feature_set,
                                                 prefix=new_features_results_prefix, method='default', saveToCSV=True,
-                                                getPrediction=True, feature_importance=True)
+                                                getPrediction=True, feature_importance=False)
 
         # currently this is the same as single_tasks, checking if it would make a difference to keep them separate or not
         elif self.mode == 'fusion':
@@ -61,7 +66,9 @@ class CrossValidator(ABC):
                     modality_feature_set = feature_sets[modality]
 
                     splits, x_columns = self.__splitter.make_splits(data=modality_data, nfolds=nfolds)
-                    trained_models_modality = {clf: self.__trainer.train(splits, clf, x_columns, modality_feature_set) for clf in self.classifiers}
+                    trained_models_modality = {clf: self.__trainer.train(folds=splits, model=clf,
+                                                                         x_columns=x_columns, feature_set=modality_feature_set,
+                                                                         feature_importance=feature_importance) for clf in self.classifiers}
 
                     # saving each modality's results
                     CrossValidator.save_results(trained_models=trained_models, feature_set=modality_feature_set,
@@ -110,11 +117,16 @@ class CrossValidator(ABC):
         # required values
         params = ParamsHandler.load_parameters('settings')
         output_folder = params['output_folder']
-        results_path = os.path.join(os.getcwd(), 'results', output_folder)
+        random_seed = params['random_seed']
+
         prediction_prefix = 'predictions'
         feature_fold_prefix = 'features_fold'
         feature_prefix = 'features'
         metrics = ['acc', 'roc', 'fms', 'precision', 'recall', 'specificity']
+        results_path = os.path.join(os.getcwd(), 'results', output_folder, str(random_seed))
+
+        if not os.path.exists(results_path):
+            os.makedirs(results_path)
 
         dfs = []
         name = "%s_%s" % (prefix, feature_set)
@@ -146,11 +158,11 @@ class CrossValidator(ABC):
                     results = cv.results[method][metric]
                     # print('@@', metric, results)
                     df = pd.DataFrame(results, columns=k_range)
-                    df['metric'] = metric.decode('utf-8', 'ignore')
+                    df['metric'] = metric
                     df['model'] = model
                     dfs += [df]
             if getPrediction:
-                for pid, prob in cv.pred_probs[method].iteritems():
+                for pid, prob in cv.pred_probs[method].items():
                     prob_0 = prob[0]
                     prob_1 = prob[1]
                     pred = cv.preds[method][pid]

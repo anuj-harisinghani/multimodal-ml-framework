@@ -15,11 +15,11 @@ class ModelsHandler:
         models = []
 
         for model in classifiers:
-            if model == 'rf':
+            if model == 'RandomForest':
                 models.append(RandomForestClassifier())
-            elif model == 'gnb':
+            elif model == 'GausNaiveBayes':
                 models.append(GaussianNB())
-            elif model == 'lr':
+            elif model == 'LogReg':
                 models.append(LogisticRegression(max_iter=80000))
             elif model == 'dummy':
                 models.append(DummyClassifier())
@@ -29,11 +29,11 @@ class ModelsHandler:
 
     @staticmethod
     def get_model(classifier: str) -> object:
-        if classifier == 'rf':
+        if classifier == 'RandomForest':
             return RandomForestClassifier()
-        elif classifier == 'gnb':
+        elif classifier == 'GausNaiveBayes':
             return GaussianNB()
-        elif classifier == 'lr':
+        elif classifier == 'LogReg':
             return LogisticRegression(max_iter=80000)
         elif classifier == 'dummy':
             return DummyClassifier()
