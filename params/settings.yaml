@@ -7,7 +7,7 @@ folds: 10
 random_seed: 0
 
 # Implemented: "single_tasks", "fusion", "ensemble"
-mode: "single_tasks"
+mode: "fusion"
 
 # Implemented: "gnb", "lr", "rf", "dummy"
 # classifiers: [ "lr", "rf", "gnb" ]

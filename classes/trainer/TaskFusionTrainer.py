@@ -81,7 +81,7 @@ class TaskFusionTrainer(Trainer):
     #     feature_scores = get_feature_scores(model_name, model, feature_names, x)
     #     return feature_scores
 
-    def calculate_task_fusion_results(self, final_data, model):
+    def calculate_task_fusion_results(self, input_data, model):
         acc = []
         fms = []
         roc = []
@@ -108,7 +108,7 @@ class TaskFusionTrainer(Trainer):
         random.Random(random_seed).shuffle(Superset_IDs)
         splits = np.array_split(Superset_IDs, nfolds)
 
-        data = final_data[model]
+        data = input_data[model]
 
         method = 'task_fusion'
         pred = data.preds[method]
@@ -155,7 +155,7 @@ class TaskFusionTrainer(Trainer):
             specificity.append(spec_scores)
 
         # save performance metrics
-        self.save_results(self.method, acc=acc, fms=fms, roc=roc,
+        self.save_results(method, acc=acc, fms=fms, roc=roc,
                           precision=precision, recall=recall, specificity=specificity,
                           pred=pred, pred_prob=pred_prob, k_range=k_range)
 
@@ -164,6 +164,7 @@ class TaskFusionTrainer(Trainer):
     def train(self, splits: list, clf: str, x_columns: list, feature_set: str, feature_importance: bool):
         self.splits = splits
         self.clf = clf
+        self.method = 'task_fusion'
 
         acc = []
         fms = []
@@ -177,7 +178,10 @@ class TaskFusionTrainer(Trainer):
         feature_scores_fold = []
         k_range = None
 
+        print("Model %s" % self.clf)
+        print("=========================")
         for idx, fold in enumerate(self.splits):
+            print("Processing fold: %i" % idx)
             x_train, y_train = fold['x_train'], fold['y_train'].ravel()
             x_test, y_test = fold['x_test'], fold['y_test'].ravel()
             labels_train, labels_test = fold['train_labels'], fold['test_labels']

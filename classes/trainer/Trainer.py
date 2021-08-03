@@ -12,7 +12,7 @@ class Trainer:
         self.preds = {}
         self.pred_probs = {}
         self.results = {}
-        self.method = 'default'
+        self.method = None
         self.k_range = None
         self.best_k = {}
         self.best_score = {}
@@ -23,5 +23,5 @@ class Trainer:
     def train(self, splits: list, clf: str, x_columns: list, feature_set: str, feature_importance: bool):
         pass
 
-    def calculate_task_fusion_results(self, data, model):
+    def calculate_task_fusion_results(self, input_data, model):
         pass

@@ -1,21 +1,18 @@
 from classes.data_splitters.DataSplitter import DataSplitter
-from classes.handlers.PIDExtractor import PIDExtractor
 from classes.handlers.ParamsHandler import ParamsHandler
 
-from typing import List
 import numpy as np
 import pandas as pd
 import os
 import random
 import copy
-from sklearn.model_selection import StratifiedKFold
 
 
 class FusionDataSplitter(DataSplitter):
     def __init__(self):
         super().__init__()
 
-    def make_splits(self, data: dict, nfolds: int) -> List:
+    def make_splits(self, data: dict, nfolds: int) -> tuple:
         x = data['x']
         y = data['y']
         labels = np.array(data['labels'])
@@ -129,4 +126,4 @@ class FusionDataSplitter(DataSplitter):
             fold['test_labels'] = labels[test_index]
             fold_data.append(fold)
 
-        return fold_data
+        return fold_data, list(x.columns.values)
