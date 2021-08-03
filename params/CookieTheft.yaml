@@ -17,7 +17,7 @@ features: {
             "ET_infounit"
            ]
          },
-  "lang": {
+  "speech": {
     "Language": ["cfg",
                  "syntactic_complexity", 
                  "psycholinguistic", 

@@ -15,7 +15,7 @@ features: {
                     "ET_pupil"
                    ]
           },
-  "lang": {
+  "speech": {
     "NLP_Reading": ["acoustics",
                     "number_of_pauses",
                     "maximum_pause_duration",

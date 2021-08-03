@@ -7,7 +7,7 @@
 modalities: ["speech"]
 # all features here
 features: {
-  "lang": {
+  "speech": {
     "Audio": ["acoustics"],
     "Text":  ["syntactic_complexity", 
               "psycholinguistic",

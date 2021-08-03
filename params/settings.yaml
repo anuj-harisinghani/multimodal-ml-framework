@@ -10,10 +10,10 @@ random_seed: 0
 mode: "single_tasks"
 
 # Implemented: "gnb", "lr", "rf", "dummy"
-classifiers: [ "lr", "rf" ]
+classifiers: [ "lr", "rf", "gnb" ]
 
 # Implemented: "cookie_theft", "pupil_calib", "memory", "reading"
-tasks: [ "CookieTheft"]
+tasks: [ "PupilCalib", "CookieTheft", "Reading", "Memory"]
 
 # output folder: specify which folder you'd like the results to go to (will be sent under ../results/)
 # if nothing is specified, then a default name is chosen based on timestamp

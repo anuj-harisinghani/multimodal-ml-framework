@@ -20,9 +20,22 @@ class ModelsHandler:
             elif model == 'gnb':
                 models.append(GaussianNB())
             elif model == 'lr':
-                models.append(LogisticRegression())
+                models.append(LogisticRegression(max_iter=80000))
             elif model == 'dummy':
                 models.append(DummyClassifier())
             else:
-                raise("invalid classifier: %s", model)
+                raise ("invalid classifier: %s", model)
         return models
+
+    @staticmethod
+    def get_model(classifier: str) -> object:
+        if classifier == 'rf':
+            return RandomForestClassifier()
+        elif classifier == 'gnb':
+            return GaussianNB()
+        elif classifier == 'lr':
+            return LogisticRegression(max_iter=80000)
+        elif classifier == 'dummy':
+            return DummyClassifier()
+        else:
+            raise ("invalid classifier: %s", classifier)

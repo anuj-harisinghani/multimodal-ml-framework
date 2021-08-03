@@ -34,7 +34,7 @@ class SingleTaskDataSplitter(DataSplitter):
                 f.write('Test%d, %s\n' % (cnt, x.index[test_index].tolist()))
                 cnt += 1
 
-        return fold_data, list(x.columns)
+        return fold_data, list(x.columns.values)
 
 
 

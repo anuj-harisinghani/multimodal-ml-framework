@@ -1,3 +1,5 @@
+import copy
+
 from classes.handlers.ParamsHandler import ParamsHandler
 
 from typing import List
@@ -16,14 +18,14 @@ class FeatureSelector:
         self.fs_pairwise = params['fs_pairwise_correlation']
         self.fs_outcome = params['fs_outcome_correlation']
 
-    def select_features(self, fold_data: dict, x_columns: list) -> tuple:
+    def select_features(self, fold_data: dict, x_columns: list, k_range: list) -> tuple:
         # extract the data from fold_data
         x_train = fold_data['x_train']
         x_test = fold_data['x_test']
         y_train = fold_data['y_train'].ravel()
 
         # getting list of features (column names) from the x data
-        feature_names = x_columns
+        feature_names = copy.deepcopy(x_columns)
 
         # choosing which features to remove based on the pairwise correlation coefficient
         to_drop = self.get_pairwise_correlated_features(x=x_train)
@@ -41,12 +43,19 @@ class FeatureSelector:
         if nfeats == 0:
             raise ValueError("No features left after feature selection!")
 
+        if k_range is None:
+            k_range = range(1, nfeats)
+        elif not k_range:
+            k_range = [1]
+        elif k_range[0] == 0:
+            raise ValueError("k_range cannot start with 0")
+
         # making the feature_selected data
         x_train_fs = x_train[:, indices]
         x_test_fs = x_test[:, indices]
         selected_feature_names = [feature_names[idx] for idx in indices]
 
-        return x_train_fs, x_test_fs, selected_feature_names
+        return x_train_fs, x_test_fs, selected_feature_names, k_range
 
     # function to get list of features to remove based on pairwise correlation
     def get_pairwise_correlated_features(self, x: np.ndarray):
@@ -59,7 +68,8 @@ class FeatureSelector:
     # function to get list of features to keep based on pearson correlation over a certain threshold
     def get_top_correlation_features_by_cutoff(self, x: np.ndarray, y: np.ndarray, method: str = 'pearson'):
         if method == 'pearson':
-            return [column for column in range(x.shape[1]) if abs(stats.pearsonr(y, x[:, column])[0]) > self.fs_outcome]
+            correlated_to_outcome = [column for column in range(x.shape[1]) if abs(stats.pearsonr(y, x[:, column])[0]) > self.fs_outcome]
+            return correlated_to_outcome
         elif method == 'pointbiserial':
             return [column for column in range(x.shape[1]) if abs(stats.pointbiserialr(y, x[:, column])[0]) > self.fs_outcome]
         else:
