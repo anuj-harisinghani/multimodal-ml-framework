@@ -2,6 +2,7 @@ from classes.trainer.Trainer import Trainer
 from classes.cv.FeatureSelector import FeatureSelector
 from classes.handlers.ModelsHandler import ModelsHandler
 from classes.handlers.ParamsHandler import ParamsHandler
+from classes.factories.DataSplitterFactory import DataSplitterFactory
 
 import numpy as np
 import random
@@ -81,7 +82,7 @@ class TaskFusionTrainer(Trainer):
     #     feature_scores = get_feature_scores(model_name, model, feature_names, x)
     #     return feature_scores
 
-    def calculate_task_fusion_results(self, input_data, model):
+    def calculate_task_fusion_results(self, data):
         acc = []
         fms = []
         roc = []
@@ -89,16 +90,11 @@ class TaskFusionTrainer(Trainer):
         recall = []
         specificity = []
 
-        # generating the folds from Superset_IDs
-        # splits = np.array_split(self.Superset_IDs, self.nfolds)
-        # f = open(RESULTS_PATH + 'splits_data.txt', 'w')
-        # f.writelines("%s\n" % split for split in splits)
-
         params = ParamsHandler.load_parameters('settings')
         random_seed = params['random_seed']
-        nfolds = params["folds"]
         output_folder = params["output_folder"]
         extraction_method = params["PID_extraction_method"]
+        nfolds = params['folds']
 
         # get list of superset_ids from the saved file
         super_pids_file_path = os.path.join('results', output_folder, extraction_method + '_super_pids.csv')
@@ -108,8 +104,7 @@ class TaskFusionTrainer(Trainer):
         random.Random(random_seed).shuffle(Superset_IDs)
         splits = np.array_split(Superset_IDs, nfolds)
 
-        data = input_data[model]
-
+        # data = input_data[clf]
         method = 'task_fusion'
         pred = data.preds[method]
         pred_prob = data.pred_probs[method]
@@ -161,11 +156,19 @@ class TaskFusionTrainer(Trainer):
 
         return self
 
-    def train(self, splits: list, clf: str, x_columns: list, feature_set: str, feature_importance: bool):
-        self.splits = splits
+    def train(self, data: dict, clf: str, feature_set: str, feature_importance: bool):
         self.clf = clf
         self.method = 'task_fusion'
 
+        self.x = data['x']
+        self.y = data['y']
+        self.labels = np.array(data['labels'])
+
+        feature_names = list(self.x.columns.values)
+        splitter = DataSplitterFactory().get(mode=self.mode)
+        self.splits = splitter.make_splits(data=data)
+
+        # defining metrics
         acc = []
         fms = []
         roc = []
@@ -180,6 +183,7 @@ class TaskFusionTrainer(Trainer):
 
         print("Model %s" % self.clf)
         print("=========================")
+
         for idx, fold in enumerate(self.splits):
             print("Processing fold: %i" % idx)
             x_train, y_train = fold['x_train'], fold['y_train'].ravel()
@@ -195,7 +199,7 @@ class TaskFusionTrainer(Trainer):
 
             # getting feature selected x_train, x_test and the list of selected features
             x_train_fs, x_test_fs, selected_feature_names, k_range = \
-                FeatureSelector().select_features(fold_data=fold, x_columns=x_columns, k_range=k_range)
+                FeatureSelector().select_features(fold_data=fold, feature_names=feature_names, k_range=k_range)
 
             # fit the model
             model = ModelsHandler.get_model(clf)
@@ -240,4 +244,3 @@ class TaskFusionTrainer(Trainer):
         #                                      model_name=model, model=None, feature_names=feature_names)
 
         return self
-

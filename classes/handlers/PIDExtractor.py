@@ -108,6 +108,7 @@ class PIDExtractor:
                 Superset_IDs = [np.union1d(Superset_IDs[i], Superset_IDs[i + 1]) for i in range(len(Superset_IDs) - 1)]
 
             self.Superset_IDs = Superset_IDs[0]
+            # super_pids_file_path = os.path.join('assets', self.output_folder, self.extraction_method + '_super_pids.csv')
             super_pids_file_path = os.path.join('results', self.output_folder, self.extraction_method + '_super_pids.csv')
             print('Superset_IDs created!')
             pd.DataFrame(self.Superset_IDs, columns=['interview']).to_csv(super_pids_file_path)

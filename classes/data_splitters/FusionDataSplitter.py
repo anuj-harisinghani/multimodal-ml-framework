@@ -12,7 +12,7 @@ class FusionDataSplitter(DataSplitter):
     def __init__(self):
         super().__init__()
 
-    def make_splits(self, data: dict, nfolds: int) -> tuple:
+    def make_splits(self, data: dict) -> list:
         x = data['x']
         y = data['y']
         labels = np.array(data['labels'])
@@ -50,7 +50,7 @@ class FusionDataSplitter(DataSplitter):
 
             # random shuffle based on random seed
             random.Random(self.random_seed).shuffle(Superset_IDs)
-            splits = np.array_split(Superset_IDs, nfolds)
+            splits = np.array_split(Superset_IDs, self.nfolds)
 
         # option 2: Split an intersection of pids across tasks, then split the out-of-intersection pids, then merge them equally
         if method == 2:
@@ -76,11 +76,11 @@ class FusionDataSplitter(DataSplitter):
             random.Random(self.random_seed).shuffle(inter_pids)
             random.Random(self.random_seed).shuffle(diff_pids)
 
-            inter_splits = np.array_split(inter_pids, nfolds)
-            diff_splits = np.array_split(diff_pids, nfolds)
+            inter_splits = np.array_split(inter_pids, self.nfolds)
+            diff_splits = np.array_split(diff_pids, self.nfolds)
 
             splits = []
-            for i in range(nfolds):
+            for i in range(self.nfolds):
                 splits.append(np.append(inter_splits[i], diff_splits[i]))
 
         # option 3: Split all tasks pids seperately, then merge them equally
@@ -99,10 +99,10 @@ class FusionDataSplitter(DataSplitter):
             # splitting each list of pids separately
             for task_pids in pids:
                 random.Random(self.random_seed).shuffle(task_pids)
-                split_pids.append(np.array_split(task_pids, nfolds))
+                split_pids.append(np.array_split(task_pids, self.nfolds))
 
             splits = []
-            for j in range(nfolds):
+            for j in range(self.nfolds):
                 task_pids = [np.union1d(split_pids[i][j], split_pids[i+1][j]) for i in range(len(split_pids)-1)]
                 splits.append(np.unique(task_pids[0]))
 
@@ -126,4 +126,4 @@ class FusionDataSplitter(DataSplitter):
             fold['test_labels'] = labels[test_index]
             fold_data.append(fold)
 
-        return fold_data, list(x.columns.values)
+        return fold_data

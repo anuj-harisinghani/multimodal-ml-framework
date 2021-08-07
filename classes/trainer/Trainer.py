@@ -1,14 +1,22 @@
 from classes.handlers.ParamsHandler import ParamsHandler
-from sklearn.metrics import f1_score, accuracy_score, roc_auc_score, precision_score, recall_score, confusion_matrix
-'''
+
+"""
 Abstract class Trainer
-'''
+"""
 
 
 class Trainer:
     def __init__(self):
+        params = ParamsHandler.load_parameters('settings')
+        self.mode = params['mode']
         self.clf = None
         self.splits = None
+        self.data = None
+        self.x = None
+        self.y = None
+        self.labels = None
+        self.feature_set = None
+
         self.preds = {}
         self.pred_probs = {}
         self.results = {}
@@ -17,11 +25,11 @@ class Trainer:
         self.best_k = {}
         self.best_score = {}
         self.feature_scores_fold = {}
-        self.feature_set = None
+        self.feature_scores_all = {}
 
 
-    def train(self, splits: list, clf: str, x_columns: list, feature_set: str, feature_importance: bool):
+    def train(self, data: dict, clf: str, feature_set: str, feature_importance: bool):
         pass
 
-    def calculate_task_fusion_results(self, input_data, model):
+    def calculate_task_fusion_results(self, data):
         pass

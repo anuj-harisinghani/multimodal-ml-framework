@@ -1,10 +1,8 @@
 from classes.handlers.ParamsHandler import ParamsHandler
 
-from typing import List
 import pandas as pd
 from scipy import stats
 import numpy as np
-import copy
 
 '''
 to be called inside trainers
@@ -17,14 +15,11 @@ class FeatureSelector:
         self.fs_pairwise = params['fs_pairwise_correlation']
         self.fs_outcome = params['fs_outcome_correlation']
 
-    def select_features(self, fold_data: dict, x_columns: list, k_range: list) -> tuple:
+    def select_features(self, fold_data: dict, feature_names: list, k_range: list) -> tuple:
         # extract the data from fold_data
         x_train = fold_data['x_train']
         x_test = fold_data['x_test']
         y_train = fold_data['y_train'].ravel()
-
-        # getting list of features (column names) from the x data
-        feature_names = copy.deepcopy(x_columns)
 
         # choosing which features to remove based on the pairwise correlation coefficient
         to_drop = self.get_pairwise_correlated_features(x=x_train)

@@ -1,5 +1,4 @@
 from abc import ABC
-from classes.factories.DataSplitterFactory import DataSplitterFactory
 from classes.factories.TrainersFactory import TrainersFactory
 from classes.handlers.ParamsHandler import ParamsHandler
 
@@ -12,14 +11,11 @@ import operator
 
 class CrossValidator(ABC):
     def __init__(self, mode: str, classifiers: list):
-        self.__splitter = DataSplitterFactory().get(mode)
         self.__trainer = TrainersFactory().get(mode)
         self.mode = mode
         self.classifiers = classifiers
 
     def cross_validate(self, tasks_data: dict):
-        params = ParamsHandler.load_parameters('settings')
-        nfolds = params["folds"]
         new_features_results_prefix = 'results_new_features'
         task_fusion_prefix = 'results_task_fusion'
         feature_importance = False
@@ -29,6 +25,7 @@ class CrossValidator(ABC):
             for task in tasks_data.keys():
                 print("\nTask %s" % task)
                 print("---------------")
+
                 task_params = ParamsHandler.load_parameters(task)
                 feature_sets = task_params['features']
 
@@ -37,9 +34,7 @@ class CrossValidator(ABC):
                     modality_feature_set = list(feature_sets[modality].keys())[0]
 
                     # splitting data then training the models
-                    splits, x_columns = self.__splitter.make_splits(data=modality_data, nfolds=nfolds)
-                    trained_models = {clf: self.__trainer.train(splits=splits, clf=clf,
-                                                                x_columns=x_columns, feature_set=modality_feature_set,
+                    trained_models = {clf: self.__trainer.train(data=modality_data, clf=clf, feature_set=modality_feature_set,
                                                                 feature_importance=False) for clf in self.classifiers}
 
                     # saving results
@@ -51,7 +46,6 @@ class CrossValidator(ABC):
         elif self.mode == 'fusion':
             trained_models = []
             method = 'task_fusion'
-            feature_importance = False
 
             # running the trainer for each of the tasks
             for task in tasks_data.keys():
@@ -66,9 +60,8 @@ class CrossValidator(ABC):
                 for modality, modality_data in tasks_data[task].items():
                     modality_feature_set = list(feature_sets[modality].keys())[0]
 
-                    splits, x_columns = self.__splitter.make_splits(data=modality_data, nfolds=nfolds)
-                    trained_models_modality = {clf: self.__trainer.train(splits=splits, clf=clf,
-                                                                         x_columns=x_columns, feature_set=modality_feature_set,
+                    # splits, x_columns = self.__splitter.make_splits(data=modality_data, nfolds=nfolds)
+                    trained_models_modality = {clf: self.__trainer.train(data=modality_data, clf=clf, feature_set=modality_feature_set,
                                                                          feature_importance=feature_importance) for clf in self.classifiers}
 
                     # saving each modality's results
@@ -88,7 +81,7 @@ class CrossValidator(ABC):
                 trained_models.append(trained_models_task[0])
 
                 # re-calculate performance metrics after aggregation of modality-wise data
-                trained_models_results = {clf: self.__trainer.calculate_task_fusion_results(input_data=trained_models_task[0], model=clf)
+                trained_models_results = {clf: self.__trainer.calculate_task_fusion_results(data=trained_models_task[0][clf])
                                           for clf in self.classifiers}
 
                 CrossValidator.save_results(trained_models=trained_models_results, feature_set=task,
@@ -98,10 +91,10 @@ class CrossValidator(ABC):
             # compiling the data from all tasks here then aggregating them
             final_trained_models = {}
             for clf in self.classifiers:
-                final_trained_models[clf] = CrossValidator.aggregate_results(data=trained_models_task, model=clf)
+                final_trained_models[clf] = CrossValidator.aggregate_results(data=trained_models, model=clf)
 
             # recalculating results after aggregation of data from all tasks
-            final_trained_models_results = {clf: self.__trainer.calculate_task_fusion_results(input_data=final_trained_models, model=clf)
+            final_trained_models_results = {clf: self.__trainer.calculate_task_fusion_results(data=final_trained_models[clf])
                                             for clf in self.classifiers}
 
             # saving results after full aggregation
@@ -110,12 +103,15 @@ class CrossValidator(ABC):
                                         getPrediction=True, feature_importance=feature_importance)
 
 
-
     @staticmethod
     def save_results(trained_models, feature_set, prefix, if_exists='replace', method='default',
                      saveToCSV=False, getPrediction=False, feature_importance=False):
 
         # required values
+        feat_csv_writer = None
+        feat_f = None
+        feat_fold_csv_writer = None
+        pred_csv_writer = None
         params = ParamsHandler.load_parameters('settings')
         output_folder = params['output_folder']
         random_seed = params['random_seed']
@@ -204,24 +200,24 @@ class CrossValidator(ABC):
             feat_fold_f.close()
 
     @staticmethod
-    def aggregate_results(data: list, model):
+    def aggregate_results(data: list, model: str):
         method = 'task_fusion'
         avg_preds = {}
         avg_pred_probs = {}
 
         # this portion gets activated when across_tasks or across modalities aggregation is required
         # since the model being passed is a single model (either GNB, or RF, or LR)
-        if type(model) == str:
-            new_data = data[-1][model]  # initializing new_data to be one of DementiaCV objects (the last object)
-            num = len(data)
-            sub_data = np.array([data[t][model] for t in range(num)])
+        # if type(model) == str:
+        new_data = data[-1][model]
+        num = len(data)
+        sub_data = np.array([data[t][model] for t in range(num)])
 
         # this portion gets activated when within_tasks aggregation is required
         # since the models being passed will be more than one
-        elif type(model) == list:
-            new_data = data[model[-1]]
-            num = len(model)
-            sub_data = np.array([data[m] for m in model])
+        # elif type(model) == list:
+        #     new_data = data[model[-1]]
+        #     num = len(model)
+        #     sub_data = np.array([data[m] for m in model])
 
         # sub_data will hold all the DementiaCV instances for a particular model, across all tasks
         # so for task='PupilCalib+CookieTheft+Reading+Memory':
@@ -231,7 +227,7 @@ class CrossValidator(ABC):
         # pred_probs --------------------------------------------------------------------------------------------------
 
         # find the union of all pids across all tasks
-        union_pids = np.unique(np.concatenate([sub_data[i].pred_probs[method].keys() for i in range(num)]))
+        union_pids = np.unique(np.concatenate([list(sub_data[i].pred_probs[method].keys()) for i in range(num)]))
         pred_probs_dict = {}
 
         # averaging the pred_probs for a certain PID whenever it's seen across all tasks
