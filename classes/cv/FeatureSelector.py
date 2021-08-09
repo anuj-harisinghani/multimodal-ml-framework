@@ -1,3 +1,5 @@
+import copy
+
 from classes.handlers.ParamsHandler import ParamsHandler
 
 import pandas as pd
@@ -25,6 +27,8 @@ class FeatureSelector:
         to_drop = self.get_pairwise_correlated_features(x=x_train)
         x_train = np.delete(x_train, to_drop, axis=1)
         x_test = np.delete(x_test, to_drop, axis=1)
+
+        feature_names = copy.deepcopy(feature_names)
 
         if feature_names is not None:
             for idx in sorted(to_drop, reverse=True):

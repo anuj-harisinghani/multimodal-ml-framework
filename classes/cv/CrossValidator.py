@@ -10,9 +10,10 @@ import operator
 
 
 class CrossValidator(ABC):
-    def __init__(self, mode: str, classifiers: list):
+    def __init__(self, mode: str, seed: int, classifiers: list):
         self.__trainer = TrainersFactory().get(mode)
         self.mode = mode
+        self.seed = seed
         self.classifiers = classifiers
 
     def cross_validate(self, tasks_data: dict):
@@ -38,7 +39,7 @@ class CrossValidator(ABC):
                                                                 feature_importance=False) for clf in self.classifiers}
 
                     # saving results
-                    CrossValidator.save_results(trained_models=trained_models, feature_set=modality_feature_set,
+                    CrossValidator.save_results(self, trained_models=trained_models, feature_set=modality_feature_set,
                                                 prefix=new_features_results_prefix, method='default', saveToCSV=True,
                                                 getPrediction=True, feature_importance=False)
 
@@ -65,7 +66,7 @@ class CrossValidator(ABC):
                                                                          feature_importance=feature_importance) for clf in self.classifiers}
 
                     # saving each modality's results
-                    CrossValidator.save_results(trained_models=trained_models_modality, feature_set=modality_feature_set,
+                    CrossValidator.save_results(self, trained_models=trained_models_modality, feature_set=modality_feature_set,
                                                 prefix=task_fusion_prefix, method=method, saveToCSV=True,
                                                 getPrediction=True, feature_importance=feature_importance)
 
@@ -81,10 +82,10 @@ class CrossValidator(ABC):
                 trained_models.append(trained_models_task[0])
 
                 # re-calculate performance metrics after aggregation of modality-wise data
-                trained_models_results = {clf: self.__trainer.calculate_task_fusion_results(data=trained_models_task[0][clf])
+                trained_models_results = {clf: self.__trainer.calculate_task_fusion_results(data=trained_models_task[0][clf], seed=self.seed)
                                           for clf in self.classifiers}
 
-                CrossValidator.save_results(trained_models=trained_models_results, feature_set=task,
+                CrossValidator.save_results(self, trained_models=trained_models_results, feature_set=task,
                                             prefix=task_fusion_prefix, method=method, saveToCSV=True,
                                             getPrediction=True, feature_importance=feature_importance)
 
@@ -94,17 +95,16 @@ class CrossValidator(ABC):
                 final_trained_models[clf] = CrossValidator.aggregate_results(data=trained_models, model=clf)
 
             # recalculating results after aggregation of data from all tasks
-            final_trained_models_results = {clf: self.__trainer.calculate_task_fusion_results(data=final_trained_models[clf])
+            final_trained_models_results = {clf: self.__trainer.calculate_task_fusion_results(data=final_trained_models[clf], seed=self.seed)
                                             for clf in self.classifiers}
 
             # saving results after full aggregation
-            CrossValidator.save_results(trained_models=final_trained_models_results, feature_set='',
+            CrossValidator.save_results(self, trained_models=final_trained_models_results, feature_set='',
                                         prefix=task_fusion_prefix, method=method, saveToCSV=True,
                                         getPrediction=True, feature_importance=feature_importance)
 
-
-    @staticmethod
-    def save_results(trained_models, feature_set, prefix, if_exists='replace', method='default',
+    # @staticmethod
+    def save_results(self, trained_models, feature_set, prefix, if_exists='replace', method='default',
                      saveToCSV=False, getPrediction=False, feature_importance=False):
 
         # required values
@@ -114,13 +114,13 @@ class CrossValidator(ABC):
         pred_csv_writer = None
         params = ParamsHandler.load_parameters('settings')
         output_folder = params['output_folder']
-        random_seed = params['random_seed']
+        # random_seed = params['random_seed']
 
         prediction_prefix = 'predictions'
         feature_fold_prefix = 'features_fold'
         feature_prefix = 'features'
         metrics = ['acc', 'roc', 'fms', 'precision', 'recall', 'specificity']
-        results_path = os.path.join(os.getcwd(), 'results', output_folder, str(random_seed))
+        results_path = os.path.join(os.getcwd(), 'results', output_folder, str(self.seed))
 
         if not os.path.exists(results_path):
             os.makedirs(results_path)

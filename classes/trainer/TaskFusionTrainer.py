@@ -82,7 +82,7 @@ class TaskFusionTrainer(Trainer):
     #     feature_scores = get_feature_scores(model_name, model, feature_names, x)
     #     return feature_scores
 
-    def calculate_task_fusion_results(self, data):
+    def calculate_task_fusion_results(self, data, seed):
         acc = []
         fms = []
         roc = []
@@ -91,17 +91,18 @@ class TaskFusionTrainer(Trainer):
         specificity = []
 
         params = ParamsHandler.load_parameters('settings')
-        random_seed = params['random_seed']
+        # random_seed = params['random_seed']
         output_folder = params["output_folder"]
         extraction_method = params["PID_extraction_method"]
         nfolds = params['folds']
+        self.seed = seed
 
         # get list of superset_ids from the saved file
         super_pids_file_path = os.path.join('results', output_folder, extraction_method + '_super_pids.csv')
         Superset_IDs = list(pd.read_csv(super_pids_file_path)['interview'])
 
         # random shuffle based on random seed
-        random.Random(random_seed).shuffle(Superset_IDs)
+        random.Random(self.seed).shuffle(Superset_IDs)
         splits = np.array_split(Superset_IDs, nfolds)
 
         # data = input_data[clf]

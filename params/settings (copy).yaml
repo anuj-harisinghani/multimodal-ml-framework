@@ -9,17 +9,17 @@ random_seed: 0
 # Implemented: "single_tasks", "fusion", "ensemble"
 mode: "single_tasks"
 
-# Implemented: "gnb", "lr", "rf", "dummy"
-classifiers: [ "lr", "rf" ]
+# Implemented: "RandomForest", "GausNaiveBayes", "LogReg", "Dummy"
+classifiers: ["RandomForest", "GausNaiveBayes", "LogReg"]
 
 # Implemented: "cookie_theft", "pupil_calib", "memory", "reading"
-tasks: [ "Memory", "PupilCalib", "CookieTheft", "Reading" ]
+tasks: ["PupilCalib", "CookieTheft", "Reading", "Memory"]
 
 # output folder: specify which folder you'd like the results to go to (will be sent under ../results/)
 # if nothing is specified, then a default name is chosen based on timestamp
 ## default folder name would be mode_task_name_classifiers_timestamp
 ## copy this file over in the results after results are generated.
-output_folder: "dummy_result1" + _timestamp
+output_folder: "bruh" # + _timestamp
 
 # any conditions on PID list extraction
 # options can be "default",

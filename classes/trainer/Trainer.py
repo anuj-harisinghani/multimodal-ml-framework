@@ -16,6 +16,7 @@ class Trainer:
         self.y = None
         self.labels = None
         self.feature_set = None
+        self.seed = None
 
         self.preds = {}
         self.pred_probs = {}
@@ -31,5 +32,5 @@ class Trainer:
     def train(self, data: dict, clf: str, feature_set: str, feature_importance: bool):
         pass
 
-    def calculate_task_fusion_results(self, data):
+    def calculate_task_fusion_results(self, data, seed):
         pass
