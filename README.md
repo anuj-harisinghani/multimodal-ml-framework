@@ -22,7 +22,6 @@ To use the framework, the file **params/settings.yaml** contains all the paramet
 3. **mode**: defines the mode of experiment. Can be _single_tasks_ or can be _fusion_. _ensemble_ will be added soon.
     1. _single_tasks_: runs each of the specified tasks and reports their results separately. 
     2. _fusion_: runs all the specified tasks separately, then combines their results through averaging and reports results.
-
 4. **classifiers**: a list of classifiers that can be run through the framework. 
 5. **tasks**: a list of tasks that can be run through the framework. 
 6. **output_folder**: name of the folder where the results will be stored at the end of the run. This folder will be kept under the **results** folder.
@@ -33,3 +32,18 @@ Within **params/settings.yaml** file, all possible input values for each paramet
 After setting up the parameters, it's time to run the framework. Either use a Python IDE and open **main.py** and run it from there, or using the terminal, execute this line within the repository folder:
 `python main.py`
 Note: The canary environment has to be activated everytime a new terminal is opened.
+
+The results would be saved at **results/output_folder** where the output_folder is the one specified in **params/settings.yaml**.
+
+## Generating results over all the seeds
+The file **compile_results.py** is used to compile the results across all seeds and creates a cleaner looking table.
+To compile the results across all seeds, open the terminal and execute:
+
+`python compile_results.py <path to output folder> <path to file and name of file>`
+
+_For example:_ for compiling results under a folder **TF**, this above line would be:
+
+`python compile_results.py ./results/TF ./results/TF/tf`, 
+where **./results/TF/tf** is the path where the compiled results should be saved, and **tf** is the name of the file. 
+The resulting file is a .csv file. No need to specify .csv in the filename for the above line.
+
