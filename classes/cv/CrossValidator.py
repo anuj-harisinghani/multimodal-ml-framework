@@ -11,7 +11,8 @@ import operator
 
 class CrossValidator(ABC):
     def __init__(self, mode: str, seed: int, classifiers: list):
-        self.__trainer = TrainersFactory().get(mode)
+        # self.__trainer = TrainersFactory().get(mode)
+        self.__trainer = None
         self.mode = mode
         self.seed = seed
         self.classifiers = classifiers
@@ -34,9 +35,15 @@ class CrossValidator(ABC):
                 for modality, modality_data in tasks_data[task].items():
                     modality_feature_set = list(feature_sets[modality].keys())[0]
 
-                    # splitting data then training the models
-                    trained_models = {clf: self.__trainer.train(data=modality_data, clf=clf, feature_set=modality_feature_set,
-                                                                feature_importance=False) for clf in self.classifiers}
+                    # training the models
+                    trained_models = {}
+                    for clf in self.classifiers:
+                        self.__trainer = TrainersFactory().get(self.mode)
+                        trained_models[clf] = self.__trainer.train(data=modality_data, clf=clf, feature_set=modality_feature_set,
+                                                                   feature_importance=False, seed=self.seed)
+
+                    # trained_models = {clf: self.__trainer.train(data=modality_data, clf=clf, feature_set=modality_feature_set,
+                    #                                             feature_importance=False, seed=self.seed) for clf in self.classifiers}
 
                     # saving results
                     CrossValidator.save_results(self, trained_models=trained_models, feature_set=modality_feature_set,
@@ -62,8 +69,15 @@ class CrossValidator(ABC):
                     modality_feature_set = list(feature_sets[modality].keys())[0]
 
                     # splits, x_columns = self.__splitter.make_splits(data=modality_data, nfolds=nfolds)
-                    trained_models_modality = {clf: self.__trainer.train(data=modality_data, clf=clf, feature_set=modality_feature_set,
-                                                                         feature_importance=feature_importance) for clf in self.classifiers}
+                    # trained_models_modality = {clf: self.__trainer.train(data=modality_data, clf=clf, feature_set=modality_feature_set,
+                    #                                                      feature_importance=feature_importance, seed=self.seed)
+                    #                            for clf in self.classifiers}
+
+                    trained_models_modality = {}
+                    for clf in self.classifiers:
+                        self.__trainer = TrainersFactory().get(self.mode)
+                        trained_models_modality[clf] = self.__trainer.train(data=modality_data, clf=clf, feature_set=modality_feature_set,
+                                                                            feature_importance=False, seed=self.seed)
 
                     # saving each modality's results
                     CrossValidator.save_results(self, trained_models=trained_models_modality, feature_set=modality_feature_set,
@@ -82,8 +96,13 @@ class CrossValidator(ABC):
                 trained_models.append(trained_models_task[0])
 
                 # re-calculate performance metrics after aggregation of modality-wise data
-                trained_models_results = {clf: self.__trainer.calculate_task_fusion_results(data=trained_models_task[0][clf], seed=self.seed)
-                                          for clf in self.classifiers}
+                # trained_models_results = {clf: self.__trainer.calculate_task_fusion_results(data=trained_models_task[0][clf])
+                #                           for clf in self.classifiers}
+
+                trained_models_results = {}
+                for clf in self.classifiers:
+                    self.__trainer = TrainersFactory().get(self.mode)
+                    trained_models_results[clf] = self.__trainer.calculate_task_fusion_results(data=trained_models_task[0][clf])
 
                 CrossValidator.save_results(self, trained_models=trained_models_results, feature_set=task,
                                             prefix=task_fusion_prefix, method=method, saveToCSV=True,
@@ -95,8 +114,12 @@ class CrossValidator(ABC):
                 final_trained_models[clf] = CrossValidator.aggregate_results(data=trained_models, model=clf)
 
             # recalculating results after aggregation of data from all tasks
-            final_trained_models_results = {clf: self.__trainer.calculate_task_fusion_results(data=final_trained_models[clf], seed=self.seed)
-                                            for clf in self.classifiers}
+            # final_trained_models_results = {clf: self.__trainer.calculate_task_fusion_results(data=final_trained_models[clf])
+            #                                 for clf in self.classifiers}
+            final_trained_models_results = {}
+            for clf in self.classifiers:
+                self.__trainer = TrainersFactory().get(self.mode)
+                final_trained_models_results[clf] = self.__trainer.calculate_task_fusion_results(data=final_trained_models[clf])
 
             # saving results after full aggregation
             CrossValidator.save_results(self, trained_models=final_trained_models_results, feature_set='',

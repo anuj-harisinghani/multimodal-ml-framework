@@ -20,7 +20,7 @@ class ModelsHandler:
             elif model == 'GausNaiveBayes':
                 models.append(GaussianNB())
             elif model == 'LogReg':
-                models.append(LogisticRegression(max_iter=80000))
+                models.append(LogisticRegression())
             elif model == 'dummy':
                 models.append(DummyClassifier())
             else:

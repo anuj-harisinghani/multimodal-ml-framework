@@ -15,63 +15,6 @@ class TaskFusionTrainer(Trainer):
     def __init__(self):
         super().__init__()
 
-    @staticmethod
-    def compute_save_results(y_true: np.ndarray, y_pred: np.ndarray, y_prob: np.ndarray,
-                             acc_saved=None, fms_saved=None, roc_saved=None,
-                             precision_saved=None, recall_saved=None, spec_saved=None):
-        if precision_saved is None:
-            precision_saved = []
-        if spec_saved is None:
-            spec_saved = []
-        if recall_saved is None:
-            recall_saved = []
-        if roc_saved is None:
-            roc_saved = []
-        if fms_saved is None:
-            fms_saved = []
-        if acc_saved is None:
-            acc_saved = []
-
-        acc_saved.append(accuracy_score(y_true, y_pred))
-        fms_saved.append(f1_score(y_true, y_pred))
-        roc_saved.append(roc_auc_score(y_true, y_prob))
-        precision_saved.append(precision_score(y_true, y_pred))
-        recall_saved.append(recall_score(y_true, y_pred))
-        tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
-        spec_saved.append(tn / (tn + fp))
-
-        return acc_saved, fms_saved, roc_saved, precision_saved, recall_saved, spec_saved
-
-    def save_results(self, method: str = 'default', acc=None, fms=None, roc=None,
-                     precision=None, recall=None, specificity=None,
-                     pred=None, pred_prob=None, k_range=None):
-        self.results[method] = {"acc": np.asarray(acc),
-                                "fms": np.asarray(fms),
-                                "roc": np.asarray(roc),
-                                "precision": np.asarray(precision),
-                                "recall": np.asarray(recall),
-                                "specificity": np.asarray(specificity)
-                                }
-
-        self.best_k[method] = {
-            "acc": np.array(k_range)[np.argmax(np.nanmean(acc, axis=0))],
-            "fms": np.array(k_range)[np.argmax(np.nanmean(fms, axis=0))],
-            "roc": np.array(k_range)[np.argmax(np.nanmean(roc, axis=0))],
-            "precision": np.array(k_range)[np.argmax(np.nanmean(precision, axis=0))],
-            "recall": np.array(k_range)[np.argmax(np.nanmean(recall, axis=0))],
-            "specificity": np.array(k_range)[np.argmax(np.nanmean(specificity, axis=0))],
-            "k_range": k_range}
-
-        self.best_score[method] = {"acc": np.max(np.nanmean(acc, axis=0)),
-                                   "fms": np.max(np.nanmean(fms, axis=0)),
-                                   "roc": np.max(np.nanmean(roc, axis=0)),
-                                   "precision": np.max(np.nanmean(precision, axis=0)),
-                                   "recall": np.max(np.nanmean(recall, axis=0)),
-                                   "specificity": np.max(np.nanmean(specificity, axis=0)),
-                                   }
-        self.preds[method] = pred
-        self.pred_probs[method] = pred_prob
-
     # def save_feature_importance(self, x, y, model_name, model, feature_names):
     #     if model is None:
     #         X_fs, feature_names = self.do_feature_selection_all(x.values, y,
@@ -82,7 +25,8 @@ class TaskFusionTrainer(Trainer):
     #     feature_scores = get_feature_scores(model_name, model, feature_names, x)
     #     return feature_scores
 
-    def calculate_task_fusion_results(self, data, seed):
+
+    def calculate_task_fusion_results(self, data):
         acc = []
         fms = []
         roc = []
@@ -95,7 +39,6 @@ class TaskFusionTrainer(Trainer):
         output_folder = params["output_folder"]
         extraction_method = params["PID_extraction_method"]
         nfolds = params['folds']
-        self.seed = seed
 
         # get list of superset_ids from the saved file
         super_pids_file_path = os.path.join('results', output_folder, extraction_method + '_super_pids.csv')
@@ -157,9 +100,10 @@ class TaskFusionTrainer(Trainer):
 
         return self
 
-    def train(self, data: dict, clf: str, feature_set: str, feature_importance: bool):
+    def train(self, data: dict, clf: str, feature_set: str, feature_importance: bool, seed: int):
         self.clf = clf
         self.method = 'task_fusion'
+        self.seed = seed
 
         self.x = data['x']
         self.y = data['y']
@@ -167,7 +111,7 @@ class TaskFusionTrainer(Trainer):
 
         feature_names = list(self.x.columns.values)
         splitter = DataSplitterFactory().get(mode=self.mode)
-        self.splits = splitter.make_splits(data=data)
+        self.splits = splitter.make_splits(data=data, seed=self.seed)
 
         # defining metrics
         acc = []

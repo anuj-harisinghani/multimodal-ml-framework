@@ -2,9 +2,9 @@ from classes.cv.CrossValidator import CrossValidator
 from classes.handlers.DataHandler import DataHandler
 from classes.handlers.ParamsHandler import ParamsHandler
 
+import os
 # import warnings
 # warnings.filterwarnings("ignore")
-import os
 
 
 def main():
@@ -26,6 +26,7 @@ def main():
 
     for seed in range(seeds):
         # running CrossValidator on the extracted data
+        print("\nSeed: %s" % str(seed))
         cv = CrossValidator(mode, seed, classifiers)
         cv.cross_validate(tasks_data=tasks_data)
 

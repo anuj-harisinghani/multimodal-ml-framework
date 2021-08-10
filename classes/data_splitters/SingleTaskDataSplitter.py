@@ -8,7 +8,8 @@ class SingleTaskDataSplitter(DataSplitter):
     def __init__(self):
         super().__init__()
 
-    def make_splits(self, data: dict) -> list:
+    def make_splits(self, data: dict, seed: int) -> list:
+        self.random_seed = seed
         x = data['x']
         y = data['y']
         labels = np.array(data['labels'])

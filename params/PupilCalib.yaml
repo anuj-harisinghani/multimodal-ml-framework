@@ -8,7 +8,7 @@ modalities : ["eye"]
 # all features here
 features: {
   "eye": {
-    "Eye_Reading": ["ET_fixation",
+    "ET_Basic": ["ET_fixation",
                     "ET_saccade", 
                     "ET_path",
                     "ET_pupil"
