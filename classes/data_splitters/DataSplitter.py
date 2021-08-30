@@ -9,4 +9,10 @@ class DataSplitter:
         self.nfolds = params['folds']
 
     def make_splits(self, data: dict, seed: int) -> list:
+        """
+        (abstract) make splits -> function for creating splits with the given data
+        :param data: data to split into nfolds
+        :param seed: random seed
+        :return: list containing different splits
+        """
         pass

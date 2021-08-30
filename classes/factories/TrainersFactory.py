@@ -13,6 +13,11 @@ class TrainersFactory:
         }
 
     def get(self, mode: str) -> Trainer:
+        """
+        get -> returns a Trainer class from the given mode
+        :param mode: single_tasks, fusion or ensemble. Used to choose the type of Trainer.
+        :return: Trainer class
+        """
         if mode not in self.__trainers.keys():
             raise ValueError("Trainer '{}' not supported! Supported trainers are: {}"
                              .format(mode, self.__trainers.keys()))

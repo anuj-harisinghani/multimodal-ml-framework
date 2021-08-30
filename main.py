@@ -3,8 +3,6 @@ from classes.handlers.DataHandler import DataHandler
 from classes.handlers.ParamsHandler import ParamsHandler
 
 import os
-# import warnings
-# warnings.filterwarnings("ignore")
 
 
 def main():

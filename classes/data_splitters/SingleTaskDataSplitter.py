@@ -35,9 +35,3 @@ class SingleTaskDataSplitter(DataSplitter):
                 cnt += 1
 
         return fold_data
-
-
-
-
-
-

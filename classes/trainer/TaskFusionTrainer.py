@@ -35,20 +35,18 @@ class TaskFusionTrainer(Trainer):
         specificity = []
 
         params = ParamsHandler.load_parameters('settings')
-        # random_seed = params['random_seed']
         output_folder = params["output_folder"]
         extraction_method = params["PID_extraction_method"]
         nfolds = params['folds']
 
         # get list of superset_ids from the saved file
         super_pids_file_path = os.path.join('results', output_folder, extraction_method + '_super_pids.csv')
-        Superset_IDs = list(pd.read_csv(super_pids_file_path)['interview'])
+        superset_ids = list(pd.read_csv(super_pids_file_path)['interview'])
 
         # random shuffle based on random seed
-        random.Random(self.seed).shuffle(Superset_IDs)
-        splits = np.array_split(Superset_IDs, nfolds)
+        random.Random(self.seed).shuffle(superset_ids)
+        splits = np.array_split(superset_ids, nfolds)
 
-        # data = input_data[clf]
         method = 'task_fusion'
         pred = data.preds[method]
         pred_prob = data.pred_probs[method]

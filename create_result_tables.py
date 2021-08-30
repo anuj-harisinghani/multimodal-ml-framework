@@ -24,11 +24,11 @@ RESULT_COLUMNS2 = [SETTINGS, MODEL, ACCURACY, ACCURACY_SD, ROC, ROC_SD, F1_SCORE
 
 
 def main():
-    input_files = sys.argv[1]
+    input_files = os.path.join(os.getcwd(), 'results', sys.argv[1])
     results_csv = pd.DataFrame(columns=RESULT_COLUMNS)
     for directory in os.listdir(input_files):
-        print("seed: ", directory)
-        if directory != '.DS_Store':
+        # print("seed: ", directory)
+        if os.path.isdir(os.path.join(input_files, directory)):
             for filename in os.listdir(input_files + '/' + directory):
                 if filename.startswith('results'):
                     if filename[-5:-4] == '_':
@@ -67,7 +67,7 @@ def average_seeds(results):
         models = results.model.unique()
         for model in models:
             setting_model_info = setting_groups[setting_groups[MODEL] == model]
-            print(model, setting, setting_model_info[ACCURACY].mean())
+            # print(model, setting, setting_model_info[ACCURACY].mean())
             acc = round(setting_model_info[ACCURACY].mean(), 2)
             roc = round(setting_model_info[ROC].mean(), 2)
             f1_score = round(setting_model_info[F1_SCORE].mean(), 2)
@@ -98,7 +98,8 @@ def average_seeds(results):
                 REC_SD : rec_sd,
                 SPEC_SD : spec_sd
             }, ignore_index=True)
-    results_csv.to_csv(sys.argv[2]+'.csv', index=False)
+    outfile = os.path.join(os.getcwd(), 'results', sys.argv[1], sys.argv[1]+'.csv')
+    results_csv.to_csv(outfile, index=False)
 
 if __name__ == "__main__":
     main()

@@ -58,15 +58,16 @@ class FeatureSelector:
     # function to get list of features to remove based on pairwise correlation
     def get_pairwise_correlated_features(self, x: np.ndarray):
         df = pd.DataFrame(x)
-        corr_matrix = df.corr().abs()
+        corr_matrix = df.corr().abs()  # check corr matrices between old and new from corr()
         upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
         to_drop = [column for column in upper.columns if any(upper[column] > self.fs_pairwise)]
+        # add a method/code here to remove NaN columns
         return to_drop
 
     # function to get list of features to keep based on pearson correlation over a certain threshold
     def get_top_correlation_features_by_cutoff(self, x: np.ndarray, y: np.ndarray, method: str = 'pearson'):
         if method == 'pearson':
-            correlated_to_outcome = [column for column in range(x.shape[1]) if abs(stats.pearsonr(y, np.nan_to_num(x[:, column]))[0]) > self.fs_outcome]
+            correlated_to_outcome = [column for column in range(x.shape[1]) if (any(np.isnan(x[:, column])) is False) and (abs(stats.pearsonr(y, x[:, column])[0]) > self.fs_outcome)]
             return correlated_to_outcome
         elif method == 'pointbiserial':
             return [column for column in range(x.shape[1]) if abs(stats.pointbiserialr(y, x[:, column])[0]) > self.fs_outcome]
