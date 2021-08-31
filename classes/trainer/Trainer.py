@@ -109,7 +109,7 @@ class Trainer:
         :param pred:
         :param pred_prob:
         :param k_range:
-        :return:
+        :return: nothing, saves all the results in the Trainer class object
         """
         self.results[method] = {"acc": np.asarray(acc),
                                 "fms": np.asarray(fms),

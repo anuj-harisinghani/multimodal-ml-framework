@@ -7,7 +7,7 @@ folds: 10
 random_seed: 0
 
 # Implemented: "single_tasks", "fusion", "ensemble"
-mode: "fusion"
+mode: "ensemble"
 
 # Implemented: "RandomForest", "GausNaiveBayes", "LogReg", "Dummy"
 classifiers: ["RandomForest", "GausNaiveBayes", "LogReg"]
@@ -19,7 +19,7 @@ tasks:  ["PupilCalib", "CookieTheft", "Reading", "Memory"]
 # if nothing is specified, then a default name is chosen based on timestamp
 ## default folder name would be mode_task_name_classifiers_timestamp
 ## copy this file over in the results after results are generated.
-output_folder: "TF_nan" # + _timestamp
+output_folder: "ensemble_test_all" # + _timestamp
 
 # any conditions on PID list extraction
 # options can be "default",

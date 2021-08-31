@@ -8,6 +8,7 @@ from sklearn.dummy import DummyClassifier
 
 class ModelsHandler:
     def __init__(self):
+        # empty init
         pass
 
     @staticmethod

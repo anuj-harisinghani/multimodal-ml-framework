@@ -77,7 +77,8 @@ class DataHandler:
                     dataset = pd.merge(dataset, eye_dataset, on='interview')
 
         elif modality == 'speech':
-            task_mod = 1 if task == 'CookieTheft' else 2 if task == 'Reading' else 3 if task == 'Memory' else None
+            task_mod_dict = {'CookieTheft': 1, 'Reading': 2, 'Memory': 3}
+            task_mod = task_mod_dict[task]
 
             # NLP data files merging. No need to put it in the loop as that adds time
             text_data = pd.read_csv(os.path.join(data_path, 'text.csv'))

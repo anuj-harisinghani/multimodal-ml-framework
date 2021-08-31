@@ -4,6 +4,7 @@ import os
 
 class ParamsHandler:
     def __init__(self):
+        # not required
         pass
 
     @staticmethod

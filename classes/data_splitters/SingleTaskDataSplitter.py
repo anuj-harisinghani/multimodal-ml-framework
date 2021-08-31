@@ -1,6 +1,7 @@
 from classes.data_splitters.DataSplitter import DataSplitter
 
 import numpy as np
+import os
 from sklearn.model_selection import StratifiedKFold
 
 
@@ -16,7 +17,7 @@ class SingleTaskDataSplitter(DataSplitter):
         fold_data = []
 
         folds = StratifiedKFold(n_splits=self.nfolds, shuffle=True, random_state=self.random_seed).split(x, y, groups=labels)
-        output_file = '/home/anuj/multimodal-ml-framework/assets/cv_info.txt'
+        output_file = os.path.join(os.getcwd(), 'assets', self.mode + 'cv_info.txt')
 
         with open(output_file, 'w') as f:
             cnt = 0

@@ -26,32 +26,16 @@ class FusionDataSplitter(DataSplitter):
 
         method = 1
         splits = []
+
         # option 1: Superset PIDs
-        '''
-        # for creating Superset_IDs here from the list of pids for each task, getting them from the files saved outside
-        tasks = list(data.keys())
-        Superset_IDs = []
-
-        #   # get superset pids from the provided tasks. the pids are already stored in the output_folder directory
-        for task in tasks:
-            pid_file_path = os.path.join('results', output_folder, extraction_method + '_' + task + '_pids.csv')
-            pids = list(pd.read_csv(pid_file_path)['interview'])
-            Superset_IDs.append(pids)
-
-        #   # taking a union of all the pids gotten from the different tasks
-        while(len(Superset_IDs)) > 1:
-            Superset_IDs = [np.union1d(Superset_IDs[i], Superset_IDs[i+1]) for i in range(len(Superset_IDs)-1)]
-
-        Superset_IDs = Superset_IDs[0]
-        '''
         if method == 1:
             # get list of superset_ids from the saved file
             super_pids_file_path = os.path.join('results', output_folder, extraction_method + '_super_pids.csv')
-            Superset_IDs = list(pd.read_csv(super_pids_file_path)['interview'])
+            superset_ids = list(pd.read_csv(super_pids_file_path)['interview'])
 
             # random shuffle based on random seed
-            random.Random(self.random_seed).shuffle(Superset_IDs)
-            splits = np.array_split(Superset_IDs, self.nfolds)
+            random.Random(self.random_seed).shuffle(superset_ids)
+            splits = np.array_split(superset_ids, self.nfolds)
 
         # option 2: Split an intersection of pids across tasks, then split the out-of-intersection pids, then merge them equally
         if method == 2:
@@ -83,29 +67,6 @@ class FusionDataSplitter(DataSplitter):
             splits = []
             for i in range(self.nfolds):
                 splits.append(np.append(inter_splits[i], diff_splits[i]))
-
-        # option 3: Split all tasks pids seperately, then merge them equally
-        '''
-        not working properly: inside each task, there's 10 splits
-        when combining each split across the tasks, there can be pids which are duplicated in a separate split from a different task
-        which causes the final splits to be almost 3 times the size of what a normal split should be.
-        to have global "uniqueness" across the splits, a union across all splits must be used which already works in methods 1 and 2.
-        so this one is scrapped (or is just kept here for the lulz)
-        '''
-        if method == 3:
-            pid_file_paths = {task: os.path.join('results', output_folder, extraction_method + '_' + task + '_pids.csv') for task in tasks}
-            pids = [list(pd.read_csv(pid_file_paths[task])['interview']) for task in tasks]
-
-            split_pids = []
-            # splitting each list of pids separately
-            for task_pids in pids:
-                random.Random(self.random_seed).shuffle(task_pids)
-                split_pids.append(np.array_split(task_pids, self.nfolds))
-
-            splits = []
-            for j in range(self.nfolds):
-                task_pids = [np.union1d(split_pids[i][j], split_pids[i+1][j]) for i in range(len(split_pids)-1)]
-                splits.append(np.unique(task_pids[0]))
 
         # after creating the splits:
         # manually creating folds and filling data
