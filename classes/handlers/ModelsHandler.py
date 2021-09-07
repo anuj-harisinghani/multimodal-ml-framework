@@ -1,5 +1,3 @@
-from typing import List
-
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -12,7 +10,7 @@ class ModelsHandler:
         pass
 
     @staticmethod
-    def get_models(classifiers: List) -> List:
+    def get_models(classifiers: list) -> list:
         models = []
 
         for model in classifiers:

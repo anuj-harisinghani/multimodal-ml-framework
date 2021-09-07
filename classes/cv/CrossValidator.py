@@ -17,6 +17,11 @@ class CrossValidator(ABC):
         self.classifiers = classifiers
 
     def cross_validate(self, tasks_data: dict):
+        """
+        :param tasks_data: dictionary that contains data from each task
+        :return: nothing
+        """
+
         new_features_results_prefix = 'results_new_features'
         task_fusion_prefix = 'results_task_fusion'
         feature_importance = False
@@ -116,6 +121,9 @@ class CrossValidator(ABC):
                                         get_prediction=True, feature_importance=feature_importance)
 
         elif self.mode == 'ensemble':
+            """
+            Work in progress
+            """
             for task in tasks_data.keys():
                 print("\nTask: ", task)
                 print("---------------")
@@ -136,9 +144,19 @@ class CrossValidator(ABC):
                                                 prefix=new_features_results_prefix, method='ensemble', save_to_csv=True,
                                                 get_prediction=True, feature_importance=False)
 
-    # @staticmethod
-    def save_results(self, trained_models, feature_set, prefix, if_exists='replace', method='default',
+
+    def save_results(self, trained_models, feature_set, prefix, method='default',
                      save_to_csv=False, get_prediction=False, feature_importance=False):
+        """
+        :param trained_models: a dictionary of Trainer objects that are already trained
+        :param feature_set: the set of features used for the specific modality/task
+        :param prefix: prefix to use for saving the results into file
+        :param method: variable used for referring to keys in the dict
+        :param save_to_csv: bool that decides if the results are to be saved to csv or not
+        :param get_prediction: bool that decides if predictions are to be saved or not
+        :param feature_importance: bool that decides if feature importance values are to be saved or not
+        :return: nothing
+        """
 
         # required values
         feat_csv_writer = None
@@ -230,7 +248,12 @@ class CrossValidator(ABC):
             feat_fold_f.close()
 
     @staticmethod
-    def aggregate_results(data: list, model: str):
+    def aggregate_results(data: list, model: str) -> object:
+        """
+        :param data: list of Trainer objects that contain attributes pred_probs, preds, etc.
+        :param model: classifier for which the aggregation is to be done (only used to refer to a particular entry in the dictionary)
+        :return: Trainer object with updated values
+        """
         method = 'task_fusion'
         avg_preds = {}
         avg_pred_probs = {}
@@ -242,6 +265,7 @@ class CrossValidator(ABC):
         num = len(data)
         sub_data = np.array([data[t][model] for t in range(num)])
 
+        """
         # this portion gets activated when within_tasks aggregation is required
         # since the models being passed will be more than one
         # elif type(model) == list:
@@ -253,7 +277,8 @@ class CrossValidator(ABC):
         # so for task='PupilCalib+CookieTheft+Reading+Memory':
         #        sub_data[0] = DementiaCV class for PupilCalib, some model
         #        sub_data[1] = DementiaCV class for CookieTheft, some model.. so on.
-
+        
+        """
         # pred_probs --------------------------------------------------------------------------------------------------
 
         # find the union of all pids across all tasks

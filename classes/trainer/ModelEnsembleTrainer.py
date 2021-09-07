@@ -3,7 +3,6 @@ from classes.cv.FeatureSelector import FeatureSelector
 from classes.handlers.ModelsHandler import ModelsHandler
 from classes.factories.DataSplitterFactory import DataSplitterFactory
 
-import os
 import numpy as np
 from sklearn.ensemble import StackingClassifier
 from sklearn.linear_model import LogisticRegression
@@ -14,7 +13,6 @@ class ModelEnsembleTrainer(Trainer):
         super().__init__()
 
     def train(self, data: dict, clf: str, feature_set: str, feature_importance: bool, seed: int) -> object:
-        # self.clf = clf
         self.method = 'ensemble'
         self.seed = seed
 
@@ -60,9 +58,8 @@ class ModelEnsembleTrainer(Trainer):
                 FeatureSelector().select_features(fold_data=fold, feature_names=feature_names, k_range=k_range)
 
             # fit the model
-            classifiers = ['RandomForest', 'GausNaiveBayes', 'LogReg']
-            models = [ModelsHandler.get_model(i) for i in classifiers]
-            estimators = [(classifiers[i], models[i].fit(x_train_fs, y_train)) for i in range(len(classifiers))]
+            models = [ModelsHandler.get_model(i) for i in self.clfs]
+            estimators = [(self.clfs[i], models[i].fit(x_train_fs, y_train)) for i in range(len(self.clfs))]
 
             meta_clf = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression())
             meta_clf.fit(x_train_fs, y_train)

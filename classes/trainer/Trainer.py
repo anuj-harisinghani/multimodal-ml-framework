@@ -11,6 +11,7 @@ class Trainer:
     def __init__(self):
         params = ParamsHandler.load_parameters('settings')
         self.mode = params['mode']
+        self.clfs = params['classifiers']
         self.clf = None
         self.splits = None
         self.data = None
