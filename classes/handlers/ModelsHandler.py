@@ -33,7 +33,7 @@ class ModelsHandler:
         elif classifier == 'GausNaiveBayes':
             return GaussianNB()
         elif classifier == 'LogReg':
-            return LogisticRegression(max_iter=80000)
+            return LogisticRegression()
         elif classifier == 'dummy':
             return DummyClassifier()
         else:

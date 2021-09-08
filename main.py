@@ -1,6 +1,7 @@
 from classes.cv.CrossValidator import CrossValidator
 from classes.handlers.DataHandler import DataHandler
 from classes.handlers.ParamsHandler import ParamsHandler
+from classes.handlers.ResultsHandler import ResultsHandler
 
 import os
 import warnings
@@ -24,11 +25,15 @@ def main():
     # getting the data from DataHandler and models from ModelsHandler
     tasks_data = DataHandler(mode=mode, output_folder=output_folder, extraction_method=extraction_method).load_data(tasks=tasks)
 
+    # running CrossValidator on the extracted data for the number of seeds specified
     for seed in range(seeds):
-        # running CrossValidator on the extracted data
         print("\nSeed: %s" % str(seed))
         cv = CrossValidator(mode, seed, classifiers)
         cv.cross_validate(tasks_data=tasks_data)
+
+    # compile results and save them in a single output file
+    # the name of the file will be the same as the output folder, and will be saved under it
+    ResultsHandler.compile_results(output_folder)
 
 
 if __name__ == '__main__':
