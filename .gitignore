@@ -1,4 +1,4 @@
-.idea
+.idea/
 auto.sh
 lib/SCA/L2SCA/tsurgeon.sh
 lib/SCA/L2SCA/tregex.sh
