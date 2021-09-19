@@ -1,3 +1,4 @@
+import sys
 import os
 import pandas as pd
 
@@ -21,15 +22,13 @@ SPEC_SD = 'spec_sd'
 RESULT_COLUMNS = [SETTINGS, MODEL, ACCURACY, ROC, F1_SCORE, PRECISION, RECALL, SPECIFICITY]
 RESULT_COLUMNS2 = [SETTINGS, MODEL, ACCURACY, ACCURACY_SD, ROC, ROC_SD, F1_SCORE, F1_SD, PRECISION, PREC_SD, RECALL, REC_SD, SPECIFICITY, SPEC_SD]
 
-
 class ResultsHandler:
     def __init__(self):
-        # empty init
         pass
 
     @staticmethod
-    def compile_results(foldername: str):
-        input_files = os.path.join(os.getcwd(), 'results', foldername)
+    def compile_results(dataset_name: str, foldername: str):
+        input_files = os.path.join(os.getcwd(), 'results', dataset_name, foldername)
         results_csv = pd.DataFrame(columns=RESULT_COLUMNS)
         for directory in os.listdir(input_files):
             if os.path.isdir(os.path.join(input_files, directory)):
@@ -65,10 +64,10 @@ class ResultsHandler:
                                 SPECIFICITY: specificity
                             }, ignore_index=True)
         
-        ResultsHandler.average_seeds(results_csv, foldername)
+        ResultsHandler.average_seeds(results_csv, dataset_name, foldername)
 
     @staticmethod
-    def average_seeds(results: pd.DataFrame, foldername: str):
+    def average_seeds(results: pd.DataFrame, dataset_name: str, foldername: str):
         results_csv = pd.DataFrame(columns=RESULT_COLUMNS)
         settings = results.settings.unique()
         for setting in settings:
@@ -102,13 +101,14 @@ class ResultsHandler:
                     RECALL: recall,
                     SPECIFICITY: specificity,
                     
-                    ACCURACY_SD: acc_sd,
-                    ROC_SD: roc_sd,
-                    F1_SD: f1_sd,
-                    PREC_SD: prec_sd,
-                    REC_SD: rec_sd,
-                    SPEC_SD: spec_sd
+                    ACCURACY_SD : acc_sd,
+                    ROC_SD : roc_sd,
+                    F1_SD : f1_sd,
+                    PREC_SD : prec_sd,
+                    REC_SD : rec_sd,
+                    SPEC_SD : spec_sd
                 }, ignore_index=True)
         
-        outfile = os.path.join(os.getcwd(), 'results', foldername, foldername+'.csv')
+        outfile = os.path.join(os.getcwd(), 'results', dataset_name, foldername, foldername+'.csv')
         results_csv.to_csv(outfile, index=False)
+

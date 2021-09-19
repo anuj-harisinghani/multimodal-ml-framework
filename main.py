@@ -17,8 +17,9 @@ def main():
     classifiers = params["classifiers"]
     output_folder = params["output_folder"]
     extraction_method = params["PID_extraction_method"]
+    dataset_name = params['dataset']
 
-    path = os.path.join(os.getcwd(), 'results', output_folder)
+    path = os.path.join(os.getcwd(), 'results', dataset_name, output_folder)
     if not os.path.exists(path):
         os.mkdir(path)
 
@@ -31,9 +32,9 @@ def main():
         cv = CrossValidator(mode, seed, classifiers)
         cv.cross_validate(tasks_data=tasks_data)
 
-    # compile results and save them in a single output file
-    # the name of the file will be the same as the output folder, and will be saved under it
-    ResultsHandler.compile_results(output_folder)
+    # compile results over all seeds into a single output table
+    # the name of the file will be the same as the results foldername specified in settings.yaml
+    ResultsHandler.compile_results(dataset_name, output_folder)
 
 
 if __name__ == '__main__':
