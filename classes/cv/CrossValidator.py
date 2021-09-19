@@ -15,6 +15,7 @@ class CrossValidator(ABC):
         self.mode = mode
         self.seed = seed
         self.classifiers = classifiers
+        self.dataset_name = None
 
     def cross_validate(self, tasks_data: dict):
         """
@@ -25,6 +26,7 @@ class CrossValidator(ABC):
         new_features_results_prefix = 'results_new_features'
         task_fusion_prefix = 'results_task_fusion'
         feature_importance = False
+        self.dataset_name = ParamsHandler.load_parameters('settings')['dataset']
 
         # running trainer for each of the tasks
         if self.mode == 'single_tasks':
@@ -32,7 +34,8 @@ class CrossValidator(ABC):
                 print("\nTask: ", task)
                 print("---------------")
 
-                task_params = ParamsHandler.load_parameters(task)
+                task_path = os.path.join(self.dataset_name, task)
+                task_params = ParamsHandler.load_parameters(task_path)
                 feature_sets = task_params['features']
 
                 # running trainer for each modality separately
@@ -62,7 +65,8 @@ class CrossValidator(ABC):
                 print("---------------")
 
                 trained_models_task = []
-                task_params = ParamsHandler.load_parameters(task)
+                task_path = os.path.join(self.dataset_name, task)
+                task_params = ParamsHandler.load_parameters(task_path)
                 feature_sets = task_params['features']
 
                 # running trainer for each modality separately
@@ -128,7 +132,8 @@ class CrossValidator(ABC):
                 print("\nTask: ", task)
                 print("---------------")
 
-                task_params = ParamsHandler.load_parameters(task)
+                task_path = os.path.join(self.dataset_name, task)
+                task_params = ParamsHandler.load_parameters(task_path)
                 feature_sets = task_params['features']
 
                 for modality, modality_data in tasks_data[task].items():
@@ -173,7 +178,7 @@ class CrossValidator(ABC):
         feature_fold_prefix = 'features_fold'
         feature_prefix = 'features'
         metrics = ['acc', 'roc', 'fms', 'precision', 'recall', 'specificity']
-        results_path = os.path.join(os.getcwd(), 'results', output_folder, str(self.seed))
+        results_path = os.path.join(os.getcwd(), 'results', self.dataset_name, output_folder, str(self.seed))
 
         if not os.path.exists(results_path):
             os.makedirs(results_path)
