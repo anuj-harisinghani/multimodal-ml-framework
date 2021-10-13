@@ -3,29 +3,18 @@ from classes.cv.FeatureSelector import FeatureSelector
 from classes.handlers.ModelsHandler import ModelsHandler
 from classes.factories.DataSplitterFactory import DataSplitterFactory
 
-
 import numpy as np
 
 
-class SingleModelTrainer(Trainer):
+class StackingTrainer(Trainer):
     def __init__(self):
         super().__init__()
 
-    '''
-    # def save_feature_importance(self, x, y, clf, feature_names):
-    #     if clf is None:
-    #         x_fs, feature_names = self.do_feature_selection_all(x.values, y, feature_names)
-    #         model = ModelsHandler.get_model(clf)
-    #         model.fit(x_fs, y)
-    #         X = x_fs
-    #     feature_scores = get_feature_scores(model_name, model, feature_names, x)
-    #     return feature_scores
-    '''
 
-    def train(self, data: dict, clf: str, feature_set: str, feature_importance: bool, seed: int):
-        self.clf = clf
-        self.method = 'default'
+    def train(self, data: dict, clf: str, feature_set: str, feature_importance: bool, seed: int) -> object:
+        self.method = 'ensemble'
         self.seed = seed
+        self.clf = clf
 
         self.x = data['x']
         self.y = data['y']
@@ -68,13 +57,26 @@ class SingleModelTrainer(Trainer):
             x_train_fs, x_test_fs, selected_feature_names, k_range = \
                 FeatureSelector().select_features(fold_data=fold, feature_names=feature_names, k_range=k_range)
 
+            # # fit the model
+            # models = [ModelsHandler.get_model(i) for i in self.clfs]
+            # estimators = [(self.clfs[i], models[i].fit(x_train_fs, y_train)) for i in range(len(self.clfs))]
+            #
+            # # call the stacking module
+            # meta_clf = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression())
+            # meta_clf.fit(x_train_fs, y_train)
+            #
+            # # make predictions
+            # yhat = meta_clf.predict(x_test_fs)
+            # yhat_probs = meta_clf.predict_proba(x_test_fs)
+
             # fit the model
-            self.model = ModelsHandler.get_model(clf)
-            self.model = self.model.fit(x_train_fs, y_train)
+            model = ModelsHandler.get_model(clf)
+            model = model.fit(x_train_fs, y_train)
 
             # make predictions
-            yhat = self.model.predict(x_test_fs)
-            yhat_probs = self.model.predict_proba(x_test_fs)
+            yhat = model.predict(x_test_fs)
+            yhat_probs = model.predict_proba(x_test_fs)
+
             for i in range(labels_test.shape[0]):
                 pred[labels_test[i]] = yhat[i]
                 pred_prob[labels_test[i]] = yhat_probs[i]

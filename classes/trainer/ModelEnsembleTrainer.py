@@ -4,8 +4,6 @@ from classes.handlers.ModelsHandler import ModelsHandler
 from classes.factories.DataSplitterFactory import DataSplitterFactory
 
 import numpy as np
-from sklearn.ensemble import StackingClassifier
-from sklearn.linear_model import LogisticRegression
 
 
 class ModelEnsembleTrainer(Trainer):
@@ -15,6 +13,7 @@ class ModelEnsembleTrainer(Trainer):
     def train(self, data: dict, clf: str, feature_set: str, feature_importance: bool, seed: int) -> object:
         self.method = 'ensemble'
         self.seed = seed
+        self.clf = clf
 
         self.x = data['x']
         self.y = data['y']
@@ -57,16 +56,31 @@ class ModelEnsembleTrainer(Trainer):
             x_train_fs, x_test_fs, selected_feature_names, k_range = \
                 FeatureSelector().select_features(fold_data=fold, feature_names=feature_names, k_range=k_range)
 
-            # fit the model
-            models = [ModelsHandler.get_model(i) for i in self.clfs]
-            estimators = [(self.clfs[i], models[i].fit(x_train_fs, y_train)) for i in range(len(self.clfs))]
+            # saving after-feature selection important values
+            self.x_train_fs.append(x_train_fs)
+            self.y_train.append(y_train)
+            self.x_test_fs.append(x_test_fs)
 
-            meta_clf = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression())
-            meta_clf.fit(x_train_fs, y_train)
+            # # fit the model
+            # models = [ModelsHandler.get_model(i) for i in self.clfs]
+            # estimators = [(self.clfs[i], models[i].fit(x_train_fs, y_train)) for i in range(len(self.clfs))]
+            #
+            # # call the stacking module
+            # meta_clf = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression())
+            # meta_clf.fit(x_train_fs, y_train)
+            #
+            # # make predictions
+            # yhat = meta_clf.predict(x_test_fs)
+            # yhat_probs = meta_clf.predict_proba(x_test_fs)
+
+            # fit the model
+            model = ModelsHandler.get_model(clf)
+            model = model.fit(x_train_fs, y_train)
+            self.model = model
 
             # make predictions
-            yhat = meta_clf.predict(x_test_fs)
-            yhat_probs = meta_clf.predict_proba(x_test_fs)
+            yhat = model.predict(x_test_fs)
+            yhat_probs = model.predict_proba(x_test_fs)
 
             for i in range(labels_test.shape[0]):
                 pred[labels_test[i]] = yhat[i]
@@ -87,9 +101,11 @@ class ModelEnsembleTrainer(Trainer):
             recall.append(r_scores)
             specificity.append(spec_scores)
 
+            '''
             # if feature_importance:
             #     feature_scores_fold.append(self.save_feature_importance(x=x_train_fs, y=None, clf=model,
             #                                                             feature_names=selected_feature_names))
+            '''
 
         self.save_results(method=self.method, acc=acc, fms=fms, roc=roc,
                           precision=precision, recall=recall, specificity=specificity,
@@ -97,9 +113,11 @@ class ModelEnsembleTrainer(Trainer):
 
         self.feature_scores_fold[self.method] = feature_scores_fold
 
+        '''
         # if feature_importance:  # get feature importance from the whole data
         #     self.feature_scores_all[self.method] = \
         #         self.save_feature_importance(x=self.x, y=self.y,
         #                                      clf=clf, feature_names=feature_names)
+        '''
 
         return self

@@ -1,7 +1,13 @@
 from classes.handlers.ParamsHandler import ParamsHandler
+from classes.handlers.ModelsHandler import ModelsHandler
 
 import numpy as np
 from sklearn.metrics import f1_score, accuracy_score, roc_auc_score, precision_score, recall_score, confusion_matrix
+from sklearn.model_selection import train_test_split
+
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import StackingClassifier
+from sklearn.linear_model import LogisticRegression
 """
 Abstract class Trainer
 """
@@ -20,6 +26,11 @@ class Trainer:
         self.labels = None
         self.feature_set = None
         self.seed = None
+        self.model = None
+
+        self.x_train_fs = []
+        self.x_test_fs = []
+        self.y_train = []
 
         self.preds = {}
         self.pred_probs = {}
@@ -45,14 +56,161 @@ class Trainer:
         pass
 
     @staticmethod
-    def calculate_task_fusion_results(data, seed):
+    def calculate_task_fusion_results(data):
         """
         (abstract) calculate_task_fusion_results -> function to recalculate metrics after averaging (only called for fusion)
         :param data: data after averaging
-        :param seed: random seed
         :return: object with recalculated metrics
         """
         pass
+
+    @staticmethod
+    def average_results(data: list, model) -> object:
+        """
+        :param data: list of Trainer objects that contain attributes pred_probs, preds, etc.
+        :param model: classifier for which the aggregation is to be done (only used to refer to a particular entry in the dictionary)
+        :return: Trainer object with updated values
+        """
+
+        method = 'task_fusion'
+        avg_preds = {}
+        avg_pred_probs = {}
+
+        sub_data = None
+        num = 0
+        new_data = None
+
+        # this portion gets activated when across_tasks or across modalities aggregation is required
+        # since the model being passed is a single model (either GNB, or RF, or LR)
+        if type(model) == str:
+            new_data = data[-1][model]
+            num = len(data)
+            sub_data = np.array([data[t][model] for t in range(num)])
+
+        # this portion gets activated when within_tasks aggregation is required
+        # since the models being passed will be more than one
+        elif type(model) == list:
+            new_data = data[model[-1]]
+            num = len(model)
+            sub_data = np.array([data[m] for m in model])
+
+        # sub_data will hold all the DementiaCV instances for a particular model, across all tasks
+        # so for task='PupilCalib+CookieTheft+Reading+Memory':
+        #        sub_data[0] = DementiaCV class for PupilCalib, some model
+        #        sub_data[1] = DementiaCV class for CookieTheft, some model.. so on.
+
+        # pred_probs --------------------------------------------------------------------------------------------------
+
+        # find the union of all pids across all tasks
+        union_pids = np.unique(np.concatenate([list(sub_data[i].pred_probs[method].keys()) for i in range(num)]))
+        pred_probs_dict = {}
+
+        # averaging the pred_probs for a certain PID whenever it's seen across all tasks
+        for i in union_pids:
+            pred_probs_sum_list = np.zeros(3)
+            for t in range(num):
+                if i in sub_data[t].pred_probs[method]:
+                    pred_probs_sum_list[0] += sub_data[t].pred_probs[method][i][0]
+                    pred_probs_sum_list[1] += sub_data[t].pred_probs[method][i][1]
+                    pred_probs_sum_list[2] += 1
+            pred_probs_dict[i] = np.array([pred_probs_sum_list[0] / pred_probs_sum_list[2], pred_probs_sum_list[1] / pred_probs_sum_list[2]])
+
+        avg_pred_probs[method] = pred_probs_dict
+        new_data.pred_probs = avg_pred_probs
+
+        # preds ------------------------------------------------------------------------------------------------------
+
+        # assigning True or False for preds based on what the averaged pred_probs were found in the previous step
+        preds_dict = {}
+        for i in avg_pred_probs[method]:
+            preds_dict[i] = avg_pred_probs[method][i][0] < avg_pred_probs[method][i][1]
+
+        avg_preds[method] = preds_dict
+        new_data.preds = avg_preds
+
+        # returned the updated new_data - only pred_probs and preds are changed, the rest are the same as the initially chosen new_data
+        return new_data
+
+
+    @staticmethod
+    def stack_results(data: list):
+        method = 'ensemble'
+        for trained_models in data:
+            clfs = list(trained_models.keys())
+
+            """
+            method 1: using StackingClassifier
+            """
+            # fit the meta-classifier with the models
+            # models = [trained_models[i].model for i in clfs]
+
+            models = [ModelsHandler.get_model(i) for i in clfs]
+            estimators = [(clfs[i], trained_models[clfs[i]].model) for i in range(len(clfs))]
+
+            meta_clf = StackingClassifier(estimators=estimators, final_estimator=AdaBoostClassifier, n_jobs=-1, passthrough=False)
+            x_train_fs = trained_models[clfs[0]].x_train_fs
+            y_train = trained_models[clfs[0]].y_train
+            meta_clf.fit()
+
+
+            """
+            method 2: manual stacking
+            """
+            # getting training preds and probs
+            x_preds_list = [trained_models[i].preds[method] for i in clfs]
+            x_probs_list = [trained_models[i].pred_probs[method] for i in clfs]
+
+            # combining all preds/probs into a single dataset with a column being preds from one of the classifiers
+            # and the rows being for each PID
+            x_preds = []
+            pids = []
+            for pid in x_preds_list[0].keys():
+                preds_list = [x_preds_list[i][pid] for i in range(len(x_preds_list))]
+                x_preds.append(preds_list)
+                pids.append(pid)
+
+            x_preds = np.array(x_preds)
+            pids = np.array(pids).reshape((len(pids), 1))
+
+            # for x_probs, there's two values for each PID - p(patient) and p(healthy). As both are complementary, we keep only one of these values.
+            x_probs = []
+            for pid in x_probs_list[0].keys():
+                probs_list = [x_probs_list[i][pid][1] for i in range(len(x_probs_list))]
+                x_probs.append(probs_list)
+
+            x_probs = np.array(x_probs)
+
+            # the true y is same for all classifiers
+            y = trained_models[clfs[0]].y.values
+
+            # train-test split
+            x_train_preds, x_test_preds, y_train_preds, y_test_preds = train_test_split(x_preds, y, test_size=0.2)
+            x_train_probs, x_test_probs, y_train_probs, y_test_probs = train_test_split(x_probs, y, test_size=0.2)
+
+            # defining meta-classifier for preds
+            meta_clf_preds = LogisticRegression()
+            meta_clf_preds = meta_clf_preds.fit(x_train_preds, y_train_preds)
+            yhat_preds = meta_clf_preds.predict(x_test_preds)
+            yhat_preds_probs = meta_clf_preds.predict_proba(x_test_preds)
+
+            score = meta_clf_preds.score(x_test_preds, y_test_preds)
+            accuracy_score(y_test_preds, yhat_preds)
+
+            meta_clf_probs = LogisticRegression()
+            meta_clf_probs = meta_clf_probs.fit(x_train_probs, y_train_probs)
+            yhat_probs = meta_clf_probs.predict(x_test_probs)
+            yhat_probs_probs = meta_clf_probs.predict_proba(x_test_probs)
+
+            score2 = meta_clf_probs.score(x_test_probs, y_test_probs)
+
+            # # call the stacking module
+            # meta_clf = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression())
+            # meta_clf.fit(x_train_fs, y_train)
+            #
+            # # make predictions
+            # yhat = meta_clf.predict(x_test_fs)
+            # yhat_probs = meta_clf.predict_proba(x_test_fs)
+
 
     @staticmethod
     def compute_save_results(y_true: np.ndarray, y_pred: np.ndarray, y_prob: np.ndarray,

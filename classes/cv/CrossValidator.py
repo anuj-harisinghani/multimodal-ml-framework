@@ -1,15 +1,13 @@
-from abc import ABC
 from classes.factories.TrainersFactory import TrainersFactory
 from classes.handlers.ParamsHandler import ParamsHandler
 
-import numpy as np
 import os
 import csv
 import pandas as pd
 import operator
 
 
-class CrossValidator(ABC):
+class CrossValidator:
     def __init__(self, mode: str, seed: int, classifiers: list):
         self.__trainer = None
         self.mode = mode
@@ -25,6 +23,7 @@ class CrossValidator(ABC):
 
         new_features_results_prefix = 'results_new_features'
         task_fusion_prefix = 'results_task_fusion'
+        ensemble_prefix = 'results_ensemble'
         feature_importance = False
         self.dataset_name = ParamsHandler.load_parameters('settings')['dataset']
 
@@ -54,7 +53,7 @@ class CrossValidator(ABC):
                                                 prefix=new_features_results_prefix, method='default', save_to_csv=True,
                                                 get_prediction=True, feature_importance=False)
 
-        # currently this is the same as single_tasks, checking if it would make a difference to keep them separate or not
+
         elif self.mode == 'fusion':
             trained_models = []
             method = 'task_fusion'
@@ -90,7 +89,7 @@ class CrossValidator(ABC):
                 if len(trained_models_task) > 1:
                     data = {}
                     for clf in self.classifiers:
-                        data[clf] = CrossValidator.aggregate_results(data=trained_models_task, model=clf)
+                        data[clf] = self.__trainer.average_results(data=trained_models_task, model=clf)
                     trained_models_task = [data]
 
                 trained_models.append(trained_models_task[0])
@@ -111,7 +110,7 @@ class CrossValidator(ABC):
             # compiling the data from all tasks here then aggregating them
             final_trained_models = {}
             for clf in self.classifiers:
-                final_trained_models[clf] = CrossValidator.aggregate_results(data=trained_models, model=clf)
+                final_trained_models[clf] = self.__trainer.average_results(data=trained_models, model=clf)
 
             # recalculating metrics and results after aggregation
             final_trained_models_results = {}
@@ -124,14 +123,17 @@ class CrossValidator(ABC):
                                         prefix=task_fusion_prefix, method=method, save_to_csv=True,
                                         get_prediction=True, feature_importance=feature_importance)
 
+
         elif self.mode == 'ensemble':
             """
             Work in progress
             """
+            trained_models = []
             for task in tasks_data.keys():
                 print("\nTask: ", task)
                 print("---------------")
 
+                trained_models_task = []
                 task_path = os.path.join(self.dataset_name, task)
                 task_params = ParamsHandler.load_parameters(task_path)
                 feature_sets = task_params['features']
@@ -139,15 +141,22 @@ class CrossValidator(ABC):
                 for modality, modality_data in tasks_data[task].items():
                     modality_feature_set = list(feature_sets[modality].keys())[0]
 
-                    trained_models = {}
-                    self.__trainer = TrainersFactory().get(self.mode)
-                    clf = 'stacked_LogReg'
-                    trained_models[clf] = self.__trainer.train(data=modality_data, clf=clf, feature_set=modality_feature_set,
-                                                               feature_importance=False, seed=self.seed)
+                    trained_models_modality = {}
+                    for clf in self.classifiers:
+                        self.__trainer = TrainersFactory().get(self.mode)
+                        trained_models_modality[clf] = self.__trainer.train(data=modality_data, clf=clf, feature_set=modality_feature_set,
+                                                                            feature_importance=False, seed=self.seed)
 
-                    CrossValidator.save_results(self, trained_models=trained_models, feature_set=modality_feature_set,
-                                                prefix=new_features_results_prefix, method='ensemble', save_to_csv=True,
+                    CrossValidator.save_results(self, trained_models=trained_models_modality, feature_set=modality_feature_set,
+                                                prefix=ensemble_prefix, method='ensemble', save_to_csv=True,
                                                 get_prediction=True, feature_importance=False)
+
+                    trained_models_task.append(trained_models_modality)
+
+                # stacking the modality-wise-results to make task-level results
+                if len(trained_models_task) >= 1:
+                    data = self.__trainer.stack_results(data=trained_models_task)
+                    trained_models.append(data)
 
 
     def save_results(self, trained_models, feature_set, prefix, method='default',
@@ -252,66 +261,70 @@ class CrossValidator(ABC):
             feat_f.close()
             feat_fold_f.close()
 
-    @staticmethod
-    def aggregate_results(data: list, model: str) -> object:
-        """
-        :param data: list of Trainer objects that contain attributes pred_probs, preds, etc.
-        :param model: classifier for which the aggregation is to be done (only used to refer to a particular entry in the dictionary)
-        :return: Trainer object with updated values
-        """
-        method = 'task_fusion'
-        avg_preds = {}
-        avg_pred_probs = {}
-
-        # this portion gets activated when across_tasks or across modalities aggregation is required
-        # since the model being passed is a single model (either GNB, or RF, or LR)
-        # if type(model) == str:
-        new_data = data[-1][model]
-        num = len(data)
-        sub_data = np.array([data[t][model] for t in range(num)])
-
-        """
-        # this portion gets activated when within_tasks aggregation is required
-        # since the models being passed will be more than one
-        # elif type(model) == list:
-        #     new_data = data[model[-1]]
-        #     num = len(model)
-        #     sub_data = np.array([data[m] for m in model])
-
-        # sub_data will hold all the DementiaCV instances for a particular model, across all tasks
-        # so for task='PupilCalib+CookieTheft+Reading+Memory':
-        #        sub_data[0] = DementiaCV class for PupilCalib, some model
-        #        sub_data[1] = DementiaCV class for CookieTheft, some model.. so on.
-        
-        """
-        # pred_probs --------------------------------------------------------------------------------------------------
-
-        # find the union of all pids across all tasks
-        union_pids = np.unique(np.concatenate([list(sub_data[i].pred_probs[method].keys()) for i in range(num)]))
-        pred_probs_dict = {}
-
-        # averaging the pred_probs for a certain PID whenever it's seen across all tasks
-        for i in union_pids:
-            pred_probs_sum_list = np.zeros(3)
-            for t in range(num):
-                if i in sub_data[t].pred_probs[method]:
-                    pred_probs_sum_list[0] += sub_data[t].pred_probs[method][i][0]
-                    pred_probs_sum_list[1] += sub_data[t].pred_probs[method][i][1]
-                    pred_probs_sum_list[2] += 1
-            pred_probs_dict[i] = np.array([pred_probs_sum_list[0] / pred_probs_sum_list[2], pred_probs_sum_list[1] / pred_probs_sum_list[2]])
-
-        avg_pred_probs[method] = pred_probs_dict
-        new_data.pred_probs = avg_pred_probs
-
-        # preds ------------------------------------------------------------------------------------------------------
-
-        # assigning True or False for preds based on what the averaged pred_probs were found in the previous step
-        preds_dict = {}
-        for i in avg_pred_probs[method]:
-            preds_dict[i] = avg_pred_probs[method][i][0] < avg_pred_probs[method][i][1]
-
-        avg_preds[method] = preds_dict
-        new_data.preds = avg_preds
-
-        # returned the updated new_data - only pred_probs and preds are changed, the rest are the same as the initially chosen new_data
-        return new_data
+    # @staticmethod
+    # def aggregate_results(data: list, model, aggregation_method: str) -> object:
+    #     """
+    #     :param data: list of Trainer objects that contain attributes pred_probs, preds, etc.
+    #     :param model: classifier for which the aggregation is to be done (only used to refer to a particular entry in the dictionary)
+    #     :param aggregation_method: the method of aggregation to be used, can be average or stack. depending on what type "model" is sent, the aggregation method will work
+    #     :return: Trainer object with updated values
+    #     """
+    #
+    #     if aggregation_method == 'average':
+    #         method = 'task_fusion'
+    #         avg_preds = {}
+    #         avg_pred_probs = {}
+    #
+    #         # this portion gets activated when across_tasks or across modalities aggregation is required
+    #         # since the model being passed is a single model (either GNB, or RF, or LR)
+    #         if type(model) == str:
+    #             new_data = data[-1][model]
+    #             num = len(data)
+    #             sub_data = np.array([data[t][model] for t in range(num)])
+    #
+    #         # this portion gets activated when within_tasks aggregation is required
+    #         # since the models being passed will be more than one
+    #         elif type(model) == list:
+    #             new_data = data[model[-1]]
+    #             num = len(model)
+    #             sub_data = np.array([data[m] for m in model])
+    #
+    #         # sub_data will hold all the DementiaCV instances for a particular model, across all tasks
+    #         # so for task='PupilCalib+CookieTheft+Reading+Memory':
+    #         #        sub_data[0] = DementiaCV class for PupilCalib, some model
+    #         #        sub_data[1] = DementiaCV class for CookieTheft, some model.. so on.
+    #
+    #         # pred_probs --------------------------------------------------------------------------------------------------
+    #
+    #         # find the union of all pids across all tasks
+    #         union_pids = np.unique(np.concatenate([list(sub_data[i].pred_probs[method].keys()) for i in range(num)]))
+    #         pred_probs_dict = {}
+    #
+    #         # averaging the pred_probs for a certain PID whenever it's seen across all tasks
+    #         for i in union_pids:
+    #             pred_probs_sum_list = np.zeros(3)
+    #             for t in range(num):
+    #                 if i in sub_data[t].pred_probs[method]:
+    #                     pred_probs_sum_list[0] += sub_data[t].pred_probs[method][i][0]
+    #                     pred_probs_sum_list[1] += sub_data[t].pred_probs[method][i][1]
+    #                     pred_probs_sum_list[2] += 1
+    #             pred_probs_dict[i] = np.array([pred_probs_sum_list[0] / pred_probs_sum_list[2], pred_probs_sum_list[1] / pred_probs_sum_list[2]])
+    #
+    #         avg_pred_probs[method] = pred_probs_dict
+    #         new_data.pred_probs = avg_pred_probs
+    #
+    #         # preds ------------------------------------------------------------------------------------------------------
+    #
+    #         # assigning True or False for preds based on what the averaged pred_probs were found in the previous step
+    #         preds_dict = {}
+    #         for i in avg_pred_probs[method]:
+    #             preds_dict[i] = avg_pred_probs[method][i][0] < avg_pred_probs[method][i][1]
+    #
+    #         avg_preds[method] = preds_dict
+    #         new_data.preds = avg_preds
+    #
+    #     elif aggregation_method == 'stack':
+    #         pass
+    #
+    #     # returned the updated new_data - only pred_probs and preds are changed, the rest are the same as the initially chosen new_data
+    #     return new_data

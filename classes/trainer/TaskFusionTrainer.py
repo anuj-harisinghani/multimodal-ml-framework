@@ -8,13 +8,13 @@ import numpy as np
 import random
 import os
 import pandas as pd
-from sklearn.metrics import f1_score, accuracy_score, roc_auc_score, precision_score, recall_score, confusion_matrix
 
 
 class TaskFusionTrainer(Trainer):
     def __init__(self):
         super().__init__()
 
+    '''
     # def save_feature_importance(self, x, y, model_name, model, feature_names):
     #     if model is None:
     #         X_fs, feature_names = self.do_feature_selection_all(x.values, y,
@@ -24,6 +24,7 @@ class TaskFusionTrainer(Trainer):
     #         X = X_fs
     #     feature_scores = get_feature_scores(model_name, model, feature_names, x)
     #     return feature_scores
+    '''
 
 
     def calculate_task_fusion_results(self, data):
@@ -170,20 +171,24 @@ class TaskFusionTrainer(Trainer):
             recall.append(r_scores)
             specificity.append(spec_scores)
 
+            '''
             # if feature_importance:
             #     feature_scores_fold.append(self.save_feature_importance(X=X_train_fs,
             #                                                             y=None, model_name=model, model=clf,
             #                                                             feature_names=selected_feature_names))
+            '''
 
         self.save_results(method=self.method, acc=acc, fms=fms, roc=roc,
                           precision=precision, recall=recall, specificity=specificity,
                           pred=pred, pred_prob=pred_prob, k_range=k_range)
 
+        '''
         # self.feature_scores_fold[self.method] = feature_scores_fold
 
         # if feature_importance:  # get feature importance from the whole data
         #     self.feature_scores_all[self.method] = \
         #         self.save_feature_importance(X=self.X, y=self.y,
         #                                      model_name=model, model=None, feature_names=feature_names)
+        '''
 
         return self
