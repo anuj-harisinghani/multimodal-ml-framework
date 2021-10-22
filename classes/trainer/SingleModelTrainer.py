@@ -35,6 +35,7 @@ class SingleModelTrainer(Trainer):
         splitter = DataSplitterFactory().get(mode=self.mode)
         self.splits = splitter.make_splits(data=data, seed=self.seed)
 
+
         # defining metrics
         acc = []
         fms = []
@@ -69,15 +70,19 @@ class SingleModelTrainer(Trainer):
                 FeatureSelector().select_features(fold_data=fold, feature_names=feature_names, k_range=k_range)
 
             # fit the model
-            self.model = ModelsHandler.get_model(clf)
-            self.model = self.model.fit(x_train_fs, y_train)
+            model = ModelsHandler.get_model(clf)
+            model = model.fit(x_train_fs, y_train)
+            self.models.append(model)
 
             # make predictions
-            yhat = self.model.predict(x_test_fs)
-            yhat_probs = self.model.predict_proba(x_test_fs)
+            yhat = model.predict(x_test_fs)
+            yhat_probs = model.predict_proba(x_test_fs)
             for i in range(labels_test.shape[0]):
                 pred[labels_test[i]] = yhat[i]
                 pred_prob[labels_test[i]] = yhat_probs[i]
+
+            self.preds.append(pred)
+            self.pred_probs.append(pred_prob)
 
             # calculating metrics for each fold
             acc_scores, fms_scores, roc_scores, p_scores, r_scores, spec_scores = \

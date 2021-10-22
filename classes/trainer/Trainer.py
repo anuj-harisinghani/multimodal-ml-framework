@@ -26,11 +26,18 @@ class Trainer:
         self.labels = None
         self.feature_set = None
         self.seed = None
-        self.model = None
+
+        self.models = []
+        self.fold_preds_train = []
+        self.fold_pred_probs_train = []
+        self.fold_preds_test = []
+        self.fold_pred_probs_test = []
 
         self.x_train_fs = []
         self.x_test_fs = []
         self.y_train = []
+        self.y_test = []
+        self.meta_clf = None
 
         self.preds = {}
         self.pred_probs = {}
@@ -133,24 +140,74 @@ class Trainer:
 
 
     @staticmethod
-    def stack_results(data: list):
+    def stack_results(data):
         method = 'ensemble'
+
+        """
+        manual stacking with cross-validation
+        """
+
+        meta_preds = {}
+        meta_pred_probs = {}
+        data = trained_models_modality
+        clfs = list(data.keys())
+        some_clf = clfs[0]
+        n_folds = len(data[some_clf].fold_preds)
+        import numpy as np
+        idx=0
+
+        for idx in range(n_folds):
+            # training data extraction
+            pids_train = list(data[some_clf].fold_preds_train[idx].keys())
+            train_preds_fold = {pid: [data[clf].fold_preds_train[idx][pid] for clf in clfs] for pid in pids_train}
+            train_labels = data[some_clf].splits[idx]['train_labels']
+
+            train_x_preds_fold = np.array(list(train_preds_fold.values()))
+            train_y_preds_fold = data[some_clf].splits[idx]['y_train']
+
+            # test data extraction
+            pids_test = list(data[some_clf].fold_preds_test[idx].keys())
+            test_preds_fold = {pid: [data[clf].fold_preds_test[idx][pid] for clf in clfs] for pid in pids_test}
+            test_labels = data[some_clf].splits[idx]['test_labels']
+
+            test_x_preds_fold = np.array(list(test_preds_fold.values()))
+            test_y_preds_fold = data[some_clf].splits[idx]['y_test']
+
+            # fit the meta classifier
+            # meta_clf = ModelsHandler.get_model(meta_clf)
+            meta_clf = LogisticRegression()
+            meta_clf = meta_clf.fit(train_x_preds_fold, train_y_preds_fold)
+
+            # meta_clf.score(test_x_preds_fold, test_y_preds_fold)
+            yhat_preds = meta_clf.predict(test_x_preds_fold)
+            accuracy_score(test_y_preds_fold, yhat_preds)
+
+
+
+
         for trained_models in data:
             clfs = list(trained_models.keys())
 
-            """
-            method 1: using StackingClassifier
-            """
-            # fit the meta-classifier with the models
-            # models = [trained_models[i].model for i in clfs]
+            # """
+            # method 1: using StackingClassifier
+            # """
+            # # fit the meta-classifier with the models
+            # # models = [trained_models[i].model for i in clfs]
+            #
+            # models = [ModelsHandler.get_model(i) for i in clfs]
+            # estimators = [(clfs[i], trained_models[clfs[i]].model) for i in range(len(clfs))]
+            #
+            # meta_clf = StackingClassifier(estimators=estimators, final_estimator=AdaBoostClassifier, n_jobs=-1, passthrough=False)
+            # x_train_fs = trained_models[clfs[0]].x_train_fs
+            # y_train = trained_models[clfs[0]].y_train
+            # meta_clf.fit()
 
-            models = [ModelsHandler.get_model(i) for i in clfs]
-            estimators = [(clfs[i], trained_models[clfs[i]].model) for i in range(len(clfs))]
 
-            meta_clf = StackingClassifier(estimators=estimators, final_estimator=AdaBoostClassifier, n_jobs=-1, passthrough=False)
-            x_train_fs = trained_models[clfs[0]].x_train_fs
-            y_train = trained_models[clfs[0]].y_train
-            meta_clf.fit()
+            """
+            method 2.1: manual stacking with cross-validation
+            """
+
+
 
 
             """
@@ -203,13 +260,6 @@ class Trainer:
 
             score2 = meta_clf_probs.score(x_test_probs, y_test_probs)
 
-            # # call the stacking module
-            # meta_clf = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression())
-            # meta_clf.fit(x_train_fs, y_train)
-            #
-            # # make predictions
-            # yhat = meta_clf.predict(x_test_fs)
-            # yhat_probs = meta_clf.predict_proba(x_test_fs)
 
 
     @staticmethod

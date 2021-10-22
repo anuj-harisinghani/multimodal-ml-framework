@@ -2,6 +2,7 @@ from classes.trainer.Trainer import Trainer
 from classes.trainer.SingleModelTrainer import SingleModelTrainer
 from classes.trainer.TaskFusionTrainer import TaskFusionTrainer
 from classes.trainer.ModelEnsembleTrainer import ModelEnsembleTrainer
+from classes.trainer.StackingTrainer import StackingTrainer
 
 
 class TrainersFactory:
@@ -9,7 +10,8 @@ class TrainersFactory:
         self.__trainers = {
             "single_tasks": SingleModelTrainer,
             "fusion": TaskFusionTrainer,
-            "ensemble": ModelEnsembleTrainer
+            "ensemble": ModelEnsembleTrainer,
+            "stacking": StackingTrainer
         }
 
     def get(self, mode: str) -> Trainer:

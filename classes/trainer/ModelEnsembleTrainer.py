@@ -23,6 +23,10 @@ class ModelEnsembleTrainer(Trainer):
         splitter = DataSplitterFactory().get(mode=self.mode)
         self.splits = splitter.make_splits(data=data, seed=self.seed)
 
+        self.models = []
+        self.fold_preds = []
+        self.fold_pred_probs = []
+
         # defining metrics
         acc = []
         fms = []
@@ -60,6 +64,7 @@ class ModelEnsembleTrainer(Trainer):
             self.x_train_fs.append(x_train_fs)
             self.y_train.append(y_train)
             self.x_test_fs.append(x_test_fs)
+            self.y_test.append(y_test)
 
             # # fit the model
             # models = [ModelsHandler.get_model(i) for i in self.clfs]
@@ -75,16 +80,43 @@ class ModelEnsembleTrainer(Trainer):
 
             # fit the model
             model = ModelsHandler.get_model(clf)
-            model = model.fit(x_train_fs, y_train)
-            self.model = model
+            model.fit(x_train_fs, y_train)
+            self.models.append(model)
 
             # make predictions
             yhat = model.predict(x_test_fs)
             yhat_probs = model.predict_proba(x_test_fs)
 
+            # make training predictions
+            yhat_train = model.predict(x_train_fs)
+            yhat_train_probs = model.predict_proba(x_train_fs)
+
+            # for stacking
+            pred_train = {}
+            pred_prob_train = {}
+            pred_test = {}
+            pred_prob_test = {}
+
+            # predictions train data for stacking
+            for i in range(labels_train.shape[0]):
+                pred_train[labels_train[i]] = yhat_train[i]
+                pred_prob_train[labels_train[i]] = yhat_train_probs[i]
+
+            self.fold_preds_train.append(pred_train)
+            self.fold_pred_probs_train.append(pred_prob_train)
+
+            # predictions test data for stacking, and normal
             for i in range(labels_test.shape[0]):
                 pred[labels_test[i]] = yhat[i]
                 pred_prob[labels_test[i]] = yhat_probs[i]
+
+                pred_test[labels_test[i]] = yhat[i]
+                pred_prob_train[labels_test[i]] = yhat_probs[i]
+
+            self.fold_preds_test.append(pred_test)
+            self.fold_pred_probs_test.append(pred_prob_test)
+
+
 
             # calculating metrics for each fold
             acc_scores, fms_scores, roc_scores, p_scores, r_scores, spec_scores = \

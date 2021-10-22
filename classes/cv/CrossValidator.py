@@ -151,12 +151,41 @@ class CrossValidator:
                                                 prefix=ensemble_prefix, method='ensemble', save_to_csv=True,
                                                 get_prediction=True, feature_importance=False)
 
-                    trained_models_task.append(trained_models_modality)
+
+                    # stacking on modality level
+                    modality_stacked = self.__trainer.stack_results(data=trained_models_modality)
+                    trained_models_task.append(modality_stacked)
+
+                    # trained_models_task.append(trained_models_modality)
 
                 # stacking the modality-wise-results to make task-level results
                 if len(trained_models_task) >= 1:
-                    data = self.__trainer.stack_results(data=trained_models_task)
-                    trained_models.append(data)
+                    task_stacked = self.__trainer.stack_results(data=trained_models_task)
+                    trained_models.append(task_stacked)
+
+
+        elif self.mode == 'stacking':
+            # method = 'sklearn'
+            for task in tasks_data.keys():
+                print("\nTask: ", task)
+                print("---------------")
+
+                task_path = os.path.join(self.dataset_name, task)
+                task_params = ParamsHandler.load_parameters(task_path)
+                feature_sets = task_params['features']
+
+                # running trainer for each modality separately
+                for modality, modality_data in tasks_data[task].items():
+                    modality_feature_set = list(feature_sets[modality].keys())[0]
+
+                    # training the models
+                    trained_models = {}
+                    for clf in self.classifiers:
+                        self.__trainer = TrainersFactory().get(self.mode)
+                        trained_models[clf] = self.__trainer.train(data=modality_data, clf=clf,
+                                                                   feature_set=modality_feature_set,
+                                                                   feature_importance=False, seed=self.seed)
+
 
 
     def save_results(self, trained_models, feature_set, prefix, method='default',

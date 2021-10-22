@@ -11,10 +11,18 @@ class StackingTrainer(Trainer):
         super().__init__()
 
 
-    def train(self, data: dict, clf: str, feature_set: str, feature_importance: bool, seed: int) -> object:
-        self.method = 'ensemble'
+    def train(self, tasks_data: dict, meta_clf: str, feature_set: str, feature_importance: bool, seed: int) -> object:
+        models = [ModelsHandler.get_model(i) for i in clfs]
+
+
+
+
+
+
+
+        self.method = 'stacking'
         self.seed = seed
-        self.clf = clf
+        self.meta_clf = meta_clf
 
         self.x = data['x']
         self.y = data['y']
@@ -23,6 +31,7 @@ class StackingTrainer(Trainer):
         feature_names = list(self.x.columns.values)
         splitter = DataSplitterFactory().get(mode=self.mode)
         self.splits = splitter.make_splits(data=data, seed=self.seed)
+
 
         # defining metrics
         acc = []
@@ -101,6 +110,8 @@ class StackingTrainer(Trainer):
             #     feature_scores_fold.append(self.save_feature_importance(x=x_train_fs, y=None, clf=model,
             #                                                             feature_names=selected_feature_names))
             '''
+
+
 
         self.save_results(method=self.method, acc=acc, fms=fms, roc=roc,
                           precision=precision, recall=recall, specificity=specificity,
