@@ -10,7 +10,7 @@ class ModelEnsembleTrainer(Trainer):
     def __init__(self):
         super().__init__()
 
-    def train(self, data: dict, clf: str, feature_set: str, feature_importance: bool, seed: int) -> object:
+    def train(self, data: dict, clf: str, seed: int, feature_set: str = '', feature_importance: bool = True):
         self.method = 'ensemble'
         self.seed = seed
         self.clf = clf
@@ -22,10 +22,6 @@ class ModelEnsembleTrainer(Trainer):
         feature_names = list(self.x.columns.values)
         splitter = DataSplitterFactory().get(mode=self.mode)
         self.splits = splitter.make_splits(data=data, seed=self.seed)
-
-        self.models = []
-        self.fold_preds = []
-        self.fold_pred_probs = []
 
         # defining metrics
         acc = []
@@ -66,21 +62,9 @@ class ModelEnsembleTrainer(Trainer):
             self.x_test_fs.append(x_test_fs)
             self.y_test.append(y_test)
 
-            # # fit the model
-            # models = [ModelsHandler.get_model(i) for i in self.clfs]
-            # estimators = [(self.clfs[i], models[i].fit(x_train_fs, y_train)) for i in range(len(self.clfs))]
-            #
-            # # call the stacking module
-            # meta_clf = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression())
-            # meta_clf.fit(x_train_fs, y_train)
-            #
-            # # make predictions
-            # yhat = meta_clf.predict(x_test_fs)
-            # yhat_probs = meta_clf.predict_proba(x_test_fs)
-
             # fit the model
             model = ModelsHandler.get_model(clf)
-            model.fit(x_train_fs, y_train)
+            model = model.fit(x_train_fs, y_train)
             self.models.append(model)
 
             # make predictions

@@ -11,7 +11,7 @@ class TrainersFactory:
             "single_tasks": SingleModelTrainer,
             "fusion": TaskFusionTrainer,
             "ensemble": ModelEnsembleTrainer,
-            "stacking": StackingTrainer
+            "stack": StackingTrainer
         }
 
     def get(self, mode: str) -> Trainer:

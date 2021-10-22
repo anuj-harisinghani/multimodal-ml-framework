@@ -99,7 +99,7 @@ class TaskFusionTrainer(Trainer):
 
         return self
 
-    def train(self, data: dict, clf: str, feature_set: str, feature_importance: bool, seed: int):
+    def train(self, data: dict, clf: str, seed: int, feature_set: str = '', feature_importance: bool = True):
         self.clf = clf
         self.method = 'task_fusion'
         self.seed = seed

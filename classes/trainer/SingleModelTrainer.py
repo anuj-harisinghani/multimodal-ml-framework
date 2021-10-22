@@ -22,7 +22,7 @@ class SingleModelTrainer(Trainer):
     #     return feature_scores
     '''
 
-    def train(self, data: dict, clf: str, feature_set: str, feature_importance: bool, seed: int):
+    def train(self, data: dict, clf: str, seed: int, feature_set: str = '', feature_importance: bool = True):
         self.clf = clf
         self.method = 'default'
         self.seed = seed

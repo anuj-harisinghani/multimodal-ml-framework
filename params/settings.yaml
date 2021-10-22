@@ -29,10 +29,14 @@ aggregation_method: "stack"
 # classifiers to use (either one or many in a list): "RandomForest", "GausNaiveBayes", "LogReg", "Dummy"
 classifiers: ["RandomForest", "GausNaiveBayes", "LogReg"]
 
+# meta_classifier to use if the aggregation method above is "stack"
+# possible options - "LogReg", "AdaBoost", "RandomForest"
+meta_classifier: "LogReg"
+
 # tasks to run
 ## for "canary" dataset, (either one or many in a list): "PupilCalib", "CookieTheft", "Reading", "Memory"
 ## for "dementia_bank" dataset (in square brackets): "dementia_bank"
-tasks:  ["PupilCalib"] # , "CookieTheft", "Reading", "Memory"]
+tasks:  ["PupilCalib", "CookieTheft", "Reading", "Memory"]
 # tasks: ["dementia_bank"]
 
 # output folder: specify which folder you'd like the results to go to (will be sent under ../results/dataset/)
