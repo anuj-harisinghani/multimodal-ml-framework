@@ -22,13 +22,13 @@ class CrossValidator:
         """
 
         settings = ParamsHandler.load_parameters('settings')
-        new_features_results_prefix = 'results_new_features'
-        task_fusion_prefix = 'results_task_fusion'
-        ensemble_prefix = 'results_ensemble'
-        feature_importance = False
         self.dataset_name = settings['dataset']
         aggregation_method = settings['aggregation_method']
         meta_clf = settings['meta_classifier']
+        prefixes = {'single_tasks': 'results_new_features',
+                    'fusion': 'results_task_fusion',
+                    'ensemble': 'results_ensemble'}
+        feature_importance = False
 
         # running trainer for each of the tasks
         if self.mode == 'single_tasks':
@@ -54,7 +54,7 @@ class CrossValidator:
 
                     # saving results
                     CrossValidator.save_results(self, trained_models=trained_models, feature_set=modality_feature_set,
-                                                prefix=new_features_results_prefix, method='default', save_to_csv=True,
+                                                prefix=prefixes[self.mode], method='default', save_to_csv=True,
                                                 get_prediction=True, feature_importance=False)
 
 
@@ -86,7 +86,7 @@ class CrossValidator:
                     # saving each modality's results
                     CrossValidator.save_results(self, trained_models=trained_models_modality,
                                                 feature_set=modality_feature_set,
-                                                prefix=task_fusion_prefix, method=method, save_to_csv=True,
+                                                prefix=prefixes[self.mode], method=method, save_to_csv=True,
                                                 get_prediction=True, feature_importance=feature_importance)
 
                     trained_models_task.append(trained_models_modality)
@@ -107,7 +107,7 @@ class CrossValidator:
                     trained_models_results[clf] = self.__trainer.calculate_task_fusion_results(data=trained_models_task[0][clf])
 
                 CrossValidator.save_results(self, trained_models=trained_models_results, feature_set=task,
-                                            prefix=task_fusion_prefix, method=method, save_to_csv=True,
+                                            prefix=prefixes[self.mode], method=method, save_to_csv=True,
                                             get_prediction=True, feature_importance=feature_importance)
 
             # compiling the data from all tasks here then aggregating them
@@ -123,7 +123,7 @@ class CrossValidator:
 
             # saving results after full aggregation
             CrossValidator.save_results(self, trained_models=final_trained_models_results, feature_set='',
-                                        prefix=task_fusion_prefix, method=method, save_to_csv=True,
+                                        prefix=prefixes[self.mode], method=method, save_to_csv=True,
                                         get_prediction=True, feature_importance=feature_importance)
 
 
@@ -133,20 +133,22 @@ class CrossValidator:
             """
             final_stacked = {}
             trained_models = []
-            task_stacked = {}
-            method = 'ensemble'
+
+            method = 'stack'
 
             for task in tasks_data.keys():
                 print("\nTask: ", task)
                 print("---------------")
 
+                task_stacked = {}
                 trained_models_task = []
                 task_path = os.path.join(self.dataset_name, task)
                 task_params = ParamsHandler.load_parameters(task_path)
                 feature_sets = task_params['features']
 
-                modality_stacked = {}
+                # modality_stacked = {}
                 for modality, modality_data in tasks_data[task].items():
+                    modality_stacked = {}
                     modality_feature_set = list(feature_sets[modality].keys())[0]
 
                     trained_models_modality = {}
@@ -164,43 +166,50 @@ class CrossValidator:
 
                     CrossValidator.save_results(self, trained_models=modality_stacked,
                                                 feature_set=modality_feature_set,
-                                                prefix=task_fusion_prefix, method=method, save_to_csv=True,
+                                                prefix=prefixes[self.mode], method=aggregation_method, save_to_csv=True,
                                                 get_prediction=True, feature_importance=feature_importance)
 
                     # CrossValidator.save_results(self, trained_models=trained_models_modality,
                     #                             feature_set=modality_feature_set,
-                    #                             prefix=task_fusion_prefix, method=method, save_to_csv=True,
+                    #                             prefix=prefixes[self.mode], method=method, save_to_csv=True,
                     #                             get_prediction=True, feature_importance=feature_importance)
 
                     trained_models_task.append(modality_stacked)
 
                 if len(trained_models_task) > 1:
+                    mod_stacked_dict = {}
+                    for data in trained_models_task:
+                        mod_stacked_dict.update(data)
+
                     task_meta_trainer = TrainersFactory().get(aggregation_method)
-                    task_stacked[task] = task_meta_trainer.train(data=trained_models_task[0], clf=meta_clf,
+                    task_stacked[task] = task_meta_trainer.train(data=mod_stacked_dict, clf=meta_clf,
                                                                  seed=self.seed)
 
                 else:
-                    task_stacked[task] = list(modality_stacked.values())[0]
+                    task_stacked[task] = list(trained_models_task[0].values())[0]
 
                 CrossValidator.save_results(self, trained_models=task_stacked, feature_set=task,
-                                            prefix=task_fusion_prefix, method=method, save_to_csv=True,
+                                            prefix=prefixes[self.mode], method=aggregation_method, save_to_csv=True,
                                             get_prediction=True, feature_importance=feature_importance)
 
                 # CrossValidator.save_results(self, trained_models=trained_models_task, feature_set=task,
-                #                             prefix=task_fusion_prefix, method=method, save_to_csv=True,
+                #                             prefix=prefixes[self.mode], method=method, save_to_csv=True,
                 #                             get_prediction=True, feature_importance=feature_importance)
 
                 trained_models.append(task_stacked)
 
             if len(trained_models) > 1:
+                task_stacked_dict = {}
+                for data in trained_models:
+                    task_stacked_dict.update(data)
                 final_meta_trainer = TrainersFactory().get(aggregation_method)
-                final_stacked[aggregation_method] = final_meta_trainer.train(data=trained_models[0], clf=meta_clf,
+                final_stacked[aggregation_method] = final_meta_trainer.train(data=task_stacked_dict, clf=meta_clf,
                                                                              seed=self.seed)
 
             # choose what feature set to use here, idk
-            # CrossValidator.save_results(self, trained_models=task_stacked, feature_set=aggregation_method,
-            #                             prefix=task_fusion_prefix, method=method, save_to_csv=True,
-            #                             get_prediction=True, feature_importance=feature_importance)
+            CrossValidator.save_results(self, trained_models=final_stacked, feature_set=aggregation_method,
+                                        prefix=prefixes[self.mode], method=method, save_to_csv=True,
+                                        get_prediction=True, feature_importance=feature_importance)
 
 
         # elif self.mode == 'stacking':
@@ -284,7 +293,7 @@ class CrossValidator:
 
         for model in trained_models:
             cv = trained_models[model]
-            k_range = cv.best_k[method]['k_range']
+            # k_range = cv.best_k[method]['k_range']
             k_range = [1]
             for metric in metrics:
                 if metric in cv.results[method].keys():

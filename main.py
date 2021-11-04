@@ -27,7 +27,7 @@ def main():
     tasks_data = DataHandler(mode=mode, output_folder=output_folder, extraction_method=extraction_method).load_data(tasks=tasks)
 
     # running CrossValidator on the extracted data for the number of seeds specified
-    for seed in range(seeds):
+    for seed in range(1):
         print("\nSeed: %s" % str(seed))
         cv = CrossValidator(mode, seed, classifiers)
         cv.cross_validate(tasks_data=tasks_data)

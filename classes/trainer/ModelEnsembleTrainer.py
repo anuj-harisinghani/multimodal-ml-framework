@@ -40,7 +40,7 @@ class ModelEnsembleTrainer(Trainer):
         print("=========================")
 
         for idx, fold in enumerate(self.splits):
-            print("Processing fold: %i" % idx)
+            # print("Processing fold: %i" % idx)
             x_train, y_train = fold['x_train'], fold['y_train'].ravel()
             x_test, y_test = fold['x_test'], fold['y_test'].ravel()
             labels_train, labels_test = fold['train_labels'], fold['test_labels']
