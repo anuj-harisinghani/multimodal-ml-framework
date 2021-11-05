@@ -100,8 +100,6 @@ class ModelEnsembleTrainer(Trainer):
             self.fold_preds_test.append(pred_test)
             self.fold_pred_probs_test.append(pred_prob_test)
 
-
-
             # calculating metrics for each fold
             acc_scores, fms_scores, roc_scores, p_scores, r_scores, spec_scores = \
                 self.compute_save_results(y_true=y_test, y_pred=yhat,

@@ -57,7 +57,6 @@ class CrossValidator:
                                                 prefix=prefixes[self.mode], method='default', save_to_csv=True,
                                                 get_prediction=True, feature_importance=False)
 
-
         elif self.mode == 'fusion':
             trained_models = []
             method = 'task_fusion'
@@ -125,7 +124,6 @@ class CrossValidator:
             CrossValidator.save_results(self, trained_models=final_trained_models_results, feature_set='',
                                         prefix=prefixes[self.mode], method=method, save_to_csv=True,
                                         get_prediction=True, feature_importance=feature_importance)
-
 
         elif self.mode == 'ensemble':
             """
@@ -211,7 +209,6 @@ class CrossValidator:
                                         prefix=prefixes[self.mode], method=method, save_to_csv=True,
                                         get_prediction=True, feature_importance=feature_importance)
 
-
         # elif self.mode == 'stacking':
         #     # method = 'sklearn'
         #     for task in tasks_data.keys():
@@ -233,8 +230,6 @@ class CrossValidator:
         #                 trained_models[clf] = self.__trainer.train(data=modality_data, clf=clf,
         #                                                            feature_set=modality_feature_set,
         #                                                            feature_importance=False, seed=self.seed)
-
-
 
     def save_results(self, trained_models, feature_set, prefix, method='default',
                      save_to_csv=False, get_prediction=False, feature_importance=False):

@@ -9,7 +9,6 @@ class StackingTrainer(Trainer):
     def __init__(self):
         super().__init__()
 
-
     def train(self, data: dict, clf: str, seed: int, feature_set: str = '', feature_importance: bool = True):
         """
         manual stacking with cross-validation
@@ -57,7 +56,6 @@ class StackingTrainer(Trainer):
             test_x_preds_fold = np.array(list(test_preds_fold.values()))
             test_y_preds_fold = data[some_clf].splits[idx]['y_test']
 
-
             # fit the meta classifier
             meta_model = ModelsHandler().get_model(clf)
             meta_model = meta_model.fit(train_x_preds_fold, train_y_preds_fold)
@@ -96,8 +94,6 @@ class StackingTrainer(Trainer):
             self.fold_preds_test.append(pred_test)
             self.fold_pred_probs_test.append(pred_prob_test)
 
-
-
             # calculating metrics for each fold
             acc_scores, fms_scores, roc_scores, p_scores, r_scores, spec_scores = \
                 self.compute_save_results(y_true=test_y_preds_fold, y_pred=yhat_preds,
@@ -118,8 +114,6 @@ class StackingTrainer(Trainer):
             #     feature_scores_fold.append(self.save_feature_importance(x=x_train_fs, y=None, clf=model,
             #                                                             feature_names=selected_feature_names))
             '''
-
-
 
         self.save_results(method=self.method, acc=acc, fms=fms, roc=roc,
                           precision=precision, recall=recall, specificity=specificity,
