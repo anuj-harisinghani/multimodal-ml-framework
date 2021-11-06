@@ -38,6 +38,7 @@ class Trainer:
         self.y_train = []
         self.y_test = []
         self.meta_clf = None
+        self.aggregation_method = params['aggregation_method']
 
         self.preds = {}
         self.pred_probs = {}

@@ -88,11 +88,11 @@ class PIDExtractor:
         # combining PIDs
         while len(pids_mod) > 1:
             # for single task and ensemble modes, we require an intersection of all PIDs, from all modalities
-            if self.mode == 'single_tasks' or self.mode == 'ensemble':
+            if self.mode == 'single_tasks':
                 pids_mod = [np.intersect1d(pids_mod[i], pids_mod[i+1]) for i in range(len(pids_mod) - 1)]
 
             # for fusion mode, we require a union of PIDs taken from each modality
-            elif self.mode == 'fusion':
+            elif self.mode == 'fusion' or self.mode == 'ensemble':
                 pids_mod = [np.union1d(pids_mod[i], pids_mod[i+1]) for i in range(len(pids_mod) - 1)]
 
         # intersecting the final list of PIDs with diagnosis, to get the PIDs with valid diagnosis
@@ -110,12 +110,14 @@ class PIDExtractor:
 
             superset_ids.append(pids)
 
-        if self.mode == 'fusion':
+        if self.mode == 'fusion' or self.mode == 'ensemble':
             # getting superset_ids for fusion, which are the union of all lists of PIDs taken from all tasks
             while (len(superset_ids)) > 1:
                 superset_ids = [np.union1d(superset_ids[i], superset_ids[i + 1]) for i in range(len(superset_ids) - 1)]
 
             self.superset_ids = superset_ids[0]
-            super_pids_file_path = os.path.join('assets', self.output_folder, self.extraction_method + '_super_pids.csv')
+            super_pids_file_path = os.path.join(os.getcwd(), 'assets', self.dataset_name, 'PIDs', self.mode +
+                                                '_' + self.extraction_method + '_super_pids.csv')
+
             print('superset_ids created!')
             pd.DataFrame(self.superset_ids, columns=['interview']).to_csv(super_pids_file_path)

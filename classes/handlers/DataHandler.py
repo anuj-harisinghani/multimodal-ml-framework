@@ -17,7 +17,8 @@ class DataHandler:
 
     def load_data(self, tasks: List) -> dict:
         tasks_data = {task: None for task in tasks}
-        self.pid_file_paths = {task: os.path.join('assets', self.dataset_name, 'PIDs', self.mode + '_' + self.extraction_method + '_' + task + '_pids.csv') for task in tasks}
+        self.pid_file_paths = {task: os.path.join('assets', self.dataset_name, 'PIDs', self.mode + '_' +
+                                                  self.extraction_method + '_' + task + '_pids.csv') for task in tasks}
 
         # extract PIDs
         PIDExtractor(mode=self.mode, extraction_method=self.extraction_method, output_folder=self.output_folder,

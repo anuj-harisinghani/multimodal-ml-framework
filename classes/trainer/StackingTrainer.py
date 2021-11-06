@@ -1,8 +1,6 @@
 from classes.trainer.Trainer import Trainer
 from classes.handlers.ModelsHandler import ModelsHandler
-
-import numpy as np
-from sklearn.metrics import accuracy_score
+from classes.factories.DataSplitterFactory import DataSplitterFactory
 
 
 class StackingTrainer(Trainer):
@@ -16,7 +14,7 @@ class StackingTrainer(Trainer):
         self.method = 'stack'
         clfs = list(data.keys())
         some_clf = clfs[0]
-        n_folds = len(data[some_clf].fold_preds_train)
+        # n_folds = len(data[some_clf].fold_preds_train)
 
         # defining metrics
         acc = []
@@ -32,7 +30,15 @@ class StackingTrainer(Trainer):
         # k_range = range(len(clfs))  # placeholder value for k-range so that it does something
         k_range = list(data[some_clf].best_k.values())[0]['k_range']
 
-        for idx in range(n_folds):
+        splitter = DataSplitterFactory().get(self.aggregation_method)
+        self.splits = splitter.make_splits(data=data, seed=self.seed)
+
+        for idx, fold in enumerate(self.splits):
+            print("Processing fold: %i" % idx)
+            x_train, y_train = fold['x_train'], fold['y_train'].ravel()
+            x_test, y_test = fold['x_test'], fold['y_test'].ravel()
+            labels_train, labels_test = fold['train_labels'], fold['test_labels']
+
             acc_scores = []
             fms_scores = []
             roc_scores = []
@@ -40,64 +46,77 @@ class StackingTrainer(Trainer):
             r_scores = []  # recall
             spec_scores = []
 
-            # training data extraction
-            pids_train = list(data[some_clf].fold_preds_train[idx].keys())
-            labels_train = data[some_clf].splits[idx]['train_labels']
-
-            train_preds_fold = {pid: [data[clf].fold_preds_train[idx][pid] for clf in clfs] for pid in pids_train}
-            train_x_preds_fold = np.array(list(train_preds_fold.values()))
-            train_y_preds_fold = data[some_clf].splits[idx]['y_train']
-
-            # test data extraction
-            pids_test = list(data[some_clf].fold_preds_test[idx].keys())
-            labels_test = data[some_clf].splits[idx]['test_labels']
-
-            test_preds_fold = {pid: [data[clf].fold_preds_test[idx][pid] for clf in clfs] for pid in pids_test}
-            test_x_preds_fold = np.array(list(test_preds_fold.values()))
-            test_y_preds_fold = data[some_clf].splits[idx]['y_test']
-
-            # fit the meta classifier
+            # train
             meta_model = ModelsHandler().get_model(clf)
-            meta_model = meta_model.fit(train_x_preds_fold, train_y_preds_fold)
+            meta_model = meta_model.fit(x_train, y_train)
 
             # make predictions
-            yhat_preds = meta_model.predict(test_x_preds_fold)
-            yhat_preds_probs = meta_model.predict_proba(test_x_preds_fold)
-            # print('Stacking: ', accuracy_score(yhat_preds, test_y_preds_fold))
+            yhat_preds = meta_model.predict(x_test)
+            yhat_pred_probs = meta_model.predict_proba(x_test)
 
-            # make training predictions
-            yhat_train = meta_model.predict(train_x_preds_fold)
-            yhat_train_probs = meta_model.predict_proba(train_x_preds_fold)
-
-            # for stacking in the next level
-            pred_train = {}
-            pred_prob_train = {}
-            pred_test = {}
-            pred_prob_test = {}
-
-            # predictions train data for stacking
-            for i in range(labels_train.shape[0]):
-                pred_train[labels_train[i]] = yhat_train[i]
-                pred_prob_train[labels_train[i]] = yhat_train_probs[i]
-
-            self.fold_preds_train.append(pred_train)
-            self.fold_pred_probs_train.append(pred_prob_train)
-
-            # predictions test data for stacking, and normal
             for i in range(labels_test.shape[0]):
                 pred[labels_test[i]] = yhat_preds[i]
-                pred_prob[labels_test[i]] = yhat_preds_probs[i]
+                pred_prob[labels_test[i]] = yhat_pred_probs[i]
 
-                pred_test[labels_test[i]] = yhat_preds[i]
-                pred_prob_train[labels_test[i]] = yhat_preds_probs[i]
-
-            self.fold_preds_test.append(pred_test)
-            self.fold_pred_probs_test.append(pred_prob_test)
+            # # training data extraction
+            # pids_train = list(data[some_clf].fold_preds_train[idx].keys())
+            # labels_train = data[some_clf].splits[idx]['train_labels']
+            #
+            # train_preds_fold = {pid: [data[clf].fold_preds_train[idx][pid] for clf in clfs] for pid in pids_train}
+            # train_x_preds_fold = np.array(list(train_preds_fold.values()))
+            # train_y_preds_fold = data[some_clf].splits[idx]['y_train']
+            #
+            # # test data extraction
+            # pids_test = list(data[some_clf].fold_preds_test[idx].keys())
+            # labels_test = data[some_clf].splits[idx]['test_labels']
+            #
+            # test_preds_fold = {pid: [data[clf].fold_preds_test[idx][pid] for clf in clfs] for pid in pids_test}
+            # test_x_preds_fold = np.array(list(test_preds_fold.values()))
+            # test_y_preds_fold = data[some_clf].splits[idx]['y_test']
+            #
+            # # fit the meta classifier
+            # meta_model = ModelsHandler().get_model(clf)
+            # meta_model = meta_model.fit(train_x_preds_fold, train_y_preds_fold)
+            #
+            # # make predictions
+            # yhat_preds = meta_model.predict(test_x_preds_fold)
+            # yhat_preds_probs = meta_model.predict_proba(test_x_preds_fold)
+            # # print('Stacking: ', accuracy_score(yhat_preds, test_y_preds_fold))
+            #
+            # # make training predictions
+            # yhat_train = meta_model.predict(train_x_preds_fold)
+            # yhat_train_probs = meta_model.predict_proba(train_x_preds_fold)
+            #
+            # # for stacking in the next level
+            # pred_train = {}
+            # pred_prob_train = {}
+            # pred_test = {}
+            # pred_prob_test = {}
+            #
+            # # predictions train data for stacking
+            # for i in range(labels_train.shape[0]):
+            #     pred_train[labels_train[i]] = yhat_train[i]
+            #     pred_prob_train[labels_train[i]] = yhat_train_probs[i]
+            #
+            # self.fold_preds_train.append(pred_train)
+            # self.fold_pred_probs_train.append(pred_prob_train)
+            #
+            # # predictions test data for stacking, and normal
+            # for i in range(labels_test.shape[0]):
+            #     pred[labels_test[i]] = yhat_preds[i]
+            #     pred_prob[labels_test[i]] = yhat_preds_probs[i]
+            #
+            #     pred_test[labels_test[i]] = yhat_preds[i]
+            #     pred_prob_train[labels_test[i]] = yhat_preds_probs[i]
+            #
+            # self.fold_preds_test.append(pred_test)
+            # self.fold_pred_probs_test.append(pred_prob_test)
 
             # calculating metrics for each fold
+
             acc_scores, fms_scores, roc_scores, p_scores, r_scores, spec_scores = \
-                self.compute_save_results(y_true=test_y_preds_fold, y_pred=yhat_preds,
-                                          y_prob=yhat_preds_probs[:, 1], acc_saved=acc_scores,
+                self.compute_save_results(y_true=y_test, y_pred=yhat_preds,
+                                          y_prob=yhat_pred_probs[:, 1], acc_saved=acc_scores,
                                           fms_saved=fms_scores, roc_saved=roc_scores,
                                           precision_saved=p_scores, recall_saved=r_scores, spec_saved=spec_scores)
 
