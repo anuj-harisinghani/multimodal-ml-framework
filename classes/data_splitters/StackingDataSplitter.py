@@ -36,12 +36,17 @@ class StackingDataSplitter(DataSplitter):
             random.Random(self.random_seed).shuffle(superset_ids)
             splits = np.array_split(superset_ids, self.nfolds)
 
-
         # create and fill x and y
         # x: from superset ids, find the pids in each of the given trained models and get their prediction values,
         # y: from superset ids, find the pids in each of the given trained models and get their y values
-        # labels:
+        # labels: just superset_ids
+        data_path = os.path.join('datasets', dataset_name)
+        diag = pd.read_csv(os.path.join(data_path, 'diagnosis.csv'))
+        true_y = diag['diagnosis'] != 'HC'
+        true_y.index = diag['interview']
+
         x = np.empty(shape=(len(superset_ids), len(data)+1), dtype='object')
+        x[:] = np.NaN
         y = np.empty(shape=(len(superset_ids), 2), dtype='object')
         labels = np.empty(shape=len(superset_ids), dtype='object')
 
@@ -51,8 +56,7 @@ class StackingDataSplitter(DataSplitter):
                 pids = list(tr.preds['ensemble'].keys())
                 if superset_ids[p] in pids:
                     x[p][k+1] = tr.preds['ensemble'][superset_ids[p]]
-                    y[p][1] = tr.y[superset_ids[p]]
-
+                    y[p][1] = true_y[superset_ids[p]]
 
         # now, for some modalities where the number of PIDs are less than the union (162), the 'within modality' x will
         # have rows where all columns will be None
@@ -61,25 +65,30 @@ class StackingDataSplitter(DataSplitter):
 
         # but in the case of 'within task', there may be some PIDs that are missing in one modality but not in the other
         # in that case, not all columns will have None in them
-        # if that happens, either: (a) fill in random values, or (b) copy paste the predictions from other columns
+        # if that happens, either: (a) fill in random values, or (b) choose by voting
 
-        to_remove_all = [r for r in range(len(x)) if np.all(x[r][1:]) is None]
-        to_fill_any = [r for r in range(len(x)) if np.any(x[r][1:]) is None]
+        to_remove_all = [r for r in range(len(x)) if np.all(np.isnan(x[r, 1:].astype('float')))]
+        to_fill_any = [r for r in range(len(x)) if np.any(np.isnan(x[r, 1:].astype('float')))]
 
+        # within modality level, when all classifiers don't have a certain PID. That PID gets counted in to_remove_all
         if len(to_remove_all) > 0:
             x = np.delete(x, to_remove_all, axis=0)
             y = np.delete(y, to_remove_all, axis=0)
             labels = np.delete(labels, to_remove_all, axis=0)
 
+        # within task or across task level, when some (not all) data keys don't have a certain PID.
         if len(to_fill_any) > 0:
-            pass
+            indices_of_nans = np.argwhere(np.isnan(x[:, 1:].astype(float)))
+            for row, col in indices_of_nans:
+                # if (a), fill in random values
+                # x[row, col+1] = bool(random.getrandbits(1))
 
-
-
-        # # for within modality level:
-        # for key, trained_model in data.items():
-        #     labels_key = np.array(list(trained_model.preds['ensemble'].keys()))
-        #     # y_key =
+                # if (b), choose the the most commonly found value (by voting)
+                x_row_as_float = x[row, 1:].astype(float)
+                nan_mask_row = np.invert(np.isnan(x_row_as_float))
+                x_masked_row = x_row_as_float[nan_mask_row].astype(int)
+                chosen_val = np.argmax(np.bincount(x_masked_row))
+                x[row, col+1] = bool(chosen_val)
 
         x = pd.DataFrame(x[:, 1:], index=x[:, 0], dtype='bool')
         y = pd.Series(y[:, 1], index=y[:, 0], dtype='bool')

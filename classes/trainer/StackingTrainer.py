@@ -11,10 +11,10 @@ class StackingTrainer(Trainer):
         """
         manual stacking with cross-validation
         """
-        self.method = 'stack'
+        self.method = 'ensemble'
+
         clfs = list(data.keys())
         some_clf = clfs[0]
-        # n_folds = len(data[some_clf].fold_preds_train)
 
         # defining metrics
         acc = []
@@ -27,7 +27,9 @@ class StackingTrainer(Trainer):
         pred = {}
         pred_prob = {}
         feature_scores_fold = []
+
         # k_range = range(len(clfs))  # placeholder value for k-range so that it does something
+
         k_range = list(data[some_clf].best_k.values())[0]['k_range']
 
         splitter = DataSplitterFactory().get(self.aggregation_method)

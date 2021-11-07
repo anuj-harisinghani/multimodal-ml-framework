@@ -132,8 +132,6 @@ class CrossValidator:
             final_stacked = {}
             trained_models = []
 
-            method = 'stack'
-
             for task in tasks_data.keys():
                 print("\nTask: ", task)
                 print("---------------")
@@ -157,20 +155,16 @@ class CrossValidator:
                                                                      feature_importance=False, seed=self.seed)
 
                     modality_meta_trainer = TrainersFactory().get(aggregation_method)
-                    modality_stacked[modality] = modality_meta_trainer.train(data=trained_models_modality, clf=meta_clf,
-                                                                             seed=self.seed,
-                                                                             feature_set=modality_feature_set,
-                                                                             feature_importance=False)
+                    modality_stacked[modality_feature_set] = modality_meta_trainer.train(data=trained_models_modality,
+                                                                                         clf=meta_clf,
+                                                                                         seed=self.seed,
+                                                                                         feature_set=modality_feature_set,
+                                                                                         feature_importance=False)
 
                     CrossValidator.save_results(self, trained_models=modality_stacked,
                                                 feature_set=modality_feature_set,
-                                                prefix=prefixes[self.mode], method=aggregation_method, save_to_csv=True,
+                                                prefix=prefixes[self.mode], method=self.mode, save_to_csv=True,
                                                 get_prediction=True, feature_importance=feature_importance)
-
-                    # CrossValidator.save_results(self, trained_models=trained_models_modality,
-                    #                             feature_set=modality_feature_set,
-                    #                             prefix=prefixes[self.mode], method=method, save_to_csv=True,
-                    #                             get_prediction=True, feature_importance=feature_importance)
 
                     trained_models_task.append(modality_stacked)
 
@@ -187,12 +181,8 @@ class CrossValidator:
                     task_stacked[task] = list(trained_models_task[0].values())[0]
 
                 CrossValidator.save_results(self, trained_models=task_stacked, feature_set=task,
-                                            prefix=prefixes[self.mode], method=aggregation_method, save_to_csv=True,
+                                            prefix=prefixes[self.mode], method=self.mode, save_to_csv=True,
                                             get_prediction=True, feature_importance=feature_importance)
-
-                # CrossValidator.save_results(self, trained_models=trained_models_task, feature_set=task,
-                #                             prefix=prefixes[self.mode], method=method, save_to_csv=True,
-                #                             get_prediction=True, feature_importance=feature_importance)
 
                 trained_models.append(task_stacked)
 
@@ -205,31 +195,9 @@ class CrossValidator:
                                                                              seed=self.seed)
 
             # choose what feature set to use here, idk
-            CrossValidator.save_results(self, trained_models=final_stacked, feature_set=aggregation_method,
-                                        prefix=prefixes[self.mode], method=method, save_to_csv=True,
+            CrossValidator.save_results(self, trained_models=final_stacked, feature_set='',
+                                        prefix=prefixes[self.mode], method=self.mode, save_to_csv=True,
                                         get_prediction=True, feature_importance=feature_importance)
-
-        # elif self.mode == 'stacking':
-        #     # method = 'sklearn'
-        #     for task in tasks_data.keys():
-        #         print("\nTask: ", task)
-        #         print("---------------")
-        #
-        #         task_path = os.path.join(self.dataset_name, task)
-        #         task_params = ParamsHandler.load_parameters(task_path)
-        #         feature_sets = task_params['features']
-        #
-        #         # running trainer for each modality separately
-        #         for modality, modality_data in tasks_data[task].items():
-        #             modality_feature_set = list(feature_sets[modality].keys())[0]
-        #
-        #             # training the models
-        #             trained_models = {}
-        #             for clf in self.classifiers:
-        #                 self.__trainer = TrainersFactory().get(self.mode)
-        #                 trained_models[clf] = self.__trainer.train(data=modality_data, clf=clf,
-        #                                                            feature_set=modality_feature_set,
-        #                                                            feature_importance=False, seed=self.seed)
 
     def save_results(self, trained_models, feature_set, prefix, method='default',
                      save_to_csv=False, get_prediction=False, feature_importance=False):

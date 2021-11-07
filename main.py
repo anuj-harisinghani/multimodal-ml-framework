@@ -24,7 +24,7 @@ def main():
         os.mkdir(path)
 
     # getting the data from DataHandler and models from ModelsHandler
-    tasks_data = DataHandler(mode=mode, output_folder=output_folder, extraction_method=extraction_method).load_data(tasks=tasks)
+    tasks_data = DataHandler(mode, output_folder, extraction_method).load_data(tasks=tasks)
 
     # running CrossValidator on the extracted data for the number of seeds specified
     for seed in range(1):

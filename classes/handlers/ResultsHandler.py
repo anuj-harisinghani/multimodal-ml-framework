@@ -1,4 +1,3 @@
-import sys
 import os
 import pandas as pd
 
@@ -20,7 +19,8 @@ REC_SD = 'rec_sd'
 SPEC_SD = 'spec_sd'
 
 RESULT_COLUMNS = [SETTINGS, MODEL, ACCURACY, ROC, F1_SCORE, PRECISION, RECALL, SPECIFICITY]
-RESULT_COLUMNS2 = [SETTINGS, MODEL, ACCURACY, ACCURACY_SD, ROC, ROC_SD, F1_SCORE, F1_SD, PRECISION, PREC_SD, RECALL, REC_SD, SPECIFICITY, SPEC_SD]
+RESULT_COLUMNS2 = [SETTINGS, MODEL, ACCURACY, ACCURACY_SD, ROC, ROC_SD, F1_SCORE, F1_SD, PRECISION, PREC_SD,
+                   RECALL, REC_SD, SPECIFICITY, SPEC_SD]
 
 
 class ResultsHandler:
@@ -36,7 +36,7 @@ class ResultsHandler:
                 for filename in os.listdir(os.path.join(input_files, directory)):
                     if filename.startswith('results'):
                         
-                        if filename[-5:-4] == '_':
+                        if len(filename[:-4].split('_')[-1]) == 0:
                             suffix = 'overall'
                         else:
                             suffix = ''
@@ -55,7 +55,7 @@ class ResultsHandler:
                             specificity = model_info[model_info[METRICS] == SPECIFICITY]['1'].mean()
                             
                             results_csv = results_csv.append({
-                                SETTINGS: filename[20:-4] + suffix,
+                                SETTINGS: filename[:-4].split('_')[-1] + suffix,
                                 MODEL: model,
                                 ACCURACY: acc,
                                 ROC: roc,
@@ -77,7 +77,9 @@ class ResultsHandler:
             
             for model in models:
                 setting_model_info = setting_groups[setting_groups[MODEL] == model]
-                
+                if setting_model_info.empty:
+                    continue
+
                 acc = round(setting_model_info[ACCURACY].mean(), 2)
                 roc = round(setting_model_info[ROC].mean(), 2)
                 f1_score = round(setting_model_info[F1_SCORE].mean(), 2)
@@ -91,25 +93,37 @@ class ResultsHandler:
                 prec_sd = round(setting_model_info[PRECISION].std(), 2)
                 rec_sd = round(setting_model_info[RECALL].std(), 2)
                 spec_sd = round(setting_model_info[SPECIFICITY].std(), 2)
-                
+
+                pmi = u"\u00B1"
+                # results_csv = results_csv.append({
+                #     SETTINGS: setting,
+                #     MODEL: model,
+                #     ACCURACY: acc,
+                #     ROC: roc,
+                #     F1_SCORE: f1_score,
+                #     PRECISION: precision,
+                #     RECALL: recall,
+                #     SPECIFICITY: specificity,
+                #
+                #     ACCURACY_SD: acc_sd,
+                #     ROC_SD: roc_sd,
+                #     F1_SD: f1_sd,
+                #     PREC_SD: prec_sd,
+                #     REC_SD: rec_sd,
+                #     SPEC_SD: spec_sd
+                # }, ignore_index=True)
+
                 results_csv = results_csv.append({
                     SETTINGS: setting,
                     MODEL: model,
-                    ACCURACY: acc,
-                    ROC: roc,
-                    F1_SCORE: f1_score,
-                    PRECISION: precision,
-                    RECALL: recall,
-                    SPECIFICITY: specificity,
-                    
-                    ACCURACY_SD : acc_sd,
-                    ROC_SD : roc_sd,
-                    F1_SD : f1_sd,
-                    PREC_SD : prec_sd,
-                    REC_SD : rec_sd,
-                    SPEC_SD : spec_sd
+                    ACCURACY: str(acc) + pmi + str(acc_sd),
+                    ROC: str(roc) + pmi + str(roc_sd),
+                    F1_SCORE: str(f1_score) + pmi + str(f1_sd),
+                    PRECISION: str(precision) + pmi + str(prec_sd),
+                    RECALL: str(recall) + pmi + str(rec_sd),
+                    SPECIFICITY: str(specificity) + pmi + str(spec_sd),
                 }, ignore_index=True)
         
         outfile = os.path.join(os.getcwd(), 'results', dataset_name, foldername, foldername+'.csv')
-        results_csv.to_csv(outfile, index=False)
+        results_csv.to_csv(outfile, index=False, columns=RESULT_COLUMNS, encoding='utf-8-sig')
 

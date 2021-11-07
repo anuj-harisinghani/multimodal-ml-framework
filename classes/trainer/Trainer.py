@@ -50,7 +50,6 @@ class Trainer:
         self.feature_scores_fold = {}
         self.feature_scores_all = {}
 
-
     def train(self, data: dict, clf: str, seed: int, feature_set: str = '', feature_importance: bool = True) -> object:
         """
         (abstract) train -> function used for training a given classifier with the data
@@ -139,129 +138,6 @@ class Trainer:
         # returned the updated new_data - only pred_probs and preds are changed, the rest are the same as the initially chosen new_data
         return new_data
 
-
-    # @staticmethod
-    # def stack_results(data):
-    #     method = 'ensemble'
-    #
-    #     """
-    #     manual stacking with cross-validation
-    #     """
-    #
-    #     meta_preds = {}
-    #     meta_pred_probs = {}
-    #     data = trained_models_modality
-    #     clfs = list(data.keys())
-    #     some_clf = clfs[0]
-    #     n_folds = len(data[some_clf].fold_preds)
-    #     import numpy as np
-    #     idx=0
-    #
-    #     for idx in range(n_folds):
-    #         # training data extraction
-    #         pids_train = list(data[some_clf].fold_preds_train[idx].keys())
-    #         train_preds_fold = {pid: [data[clf].fold_preds_train[idx][pid] for clf in clfs] for pid in pids_train}
-    #         train_labels = data[some_clf].splits[idx]['train_labels']
-    #
-    #         train_x_preds_fold = np.array(list(train_preds_fold.values()))
-    #         train_y_preds_fold = data[some_clf].splits[idx]['y_train']
-    #
-    #         # test data extraction
-    #         pids_test = list(data[some_clf].fold_preds_test[idx].keys())
-    #         test_preds_fold = {pid: [data[clf].fold_preds_test[idx][pid] for clf in clfs] for pid in pids_test}
-    #         test_labels = data[some_clf].splits[idx]['test_labels']
-    #
-    #         test_x_preds_fold = np.array(list(test_preds_fold.values()))
-    #         test_y_preds_fold = data[some_clf].splits[idx]['y_test']
-    #
-    #         # fit the meta classifier
-    #         # meta_clf = ModelsHandler.get_model(meta_clf)
-    #         meta_clf = LogisticRegression()
-    #         meta_clf = meta_clf.fit(train_x_preds_fold, train_y_preds_fold)
-    #
-    #         # meta_clf.score(test_x_preds_fold, test_y_preds_fold)
-    #         yhat_preds = meta_clf.predict(test_x_preds_fold)
-    #         accuracy_score(test_y_preds_fold, yhat_preds)
-    #
-    #
-    #
-    #
-    #     for trained_models in data:
-    #         clfs = list(trained_models.keys())
-    #
-    #         # """
-    #         # method 1: using StackingClassifier
-    #         # """
-    #         # # fit the meta-classifier with the models
-    #         # # models = [trained_models[i].model for i in clfs]
-    #         #
-    #         # models = [ModelsHandler.get_model(i) for i in clfs]
-    #         # estimators = [(clfs[i], trained_models[clfs[i]].model) for i in range(len(clfs))]
-    #         #
-    #         # meta_clf = StackingClassifier(estimators=estimators, final_estimator=AdaBoostClassifier, n_jobs=-1, passthrough=False)
-    #         # x_train_fs = trained_models[clfs[0]].x_train_fs
-    #         # y_train = trained_models[clfs[0]].y_train
-    #         # meta_clf.fit()
-    #
-    #
-    #         """
-    #         method 2.1: manual stacking with cross-validation
-    #         """
-    #
-    #
-    #
-    #
-    #         """
-    #         method 2: manual stacking
-    #         """
-    #         # getting training preds and probs
-    #         x_preds_list = [trained_models[i].preds[method] for i in clfs]
-    #         x_probs_list = [trained_models[i].pred_probs[method] for i in clfs]
-    #
-    #         # combining all preds/probs into a single dataset with a column being preds from one of the classifiers
-    #         # and the rows being for each PID
-    #         x_preds = []
-    #         pids = []
-    #         for pid in x_preds_list[0].keys():
-    #             preds_list = [x_preds_list[i][pid] for i in range(len(x_preds_list))]
-    #             x_preds.append(preds_list)
-    #             pids.append(pid)
-    #
-    #         x_preds = np.array(x_preds)
-    #         pids = np.array(pids).reshape((len(pids), 1))
-    #
-    #         # for x_probs, there's two values for each PID - p(patient) and p(healthy). As both are complementary, we keep only one of these values.
-    #         x_probs = []
-    #         for pid in x_probs_list[0].keys():
-    #             probs_list = [x_probs_list[i][pid][1] for i in range(len(x_probs_list))]
-    #             x_probs.append(probs_list)
-    #
-    #         x_probs = np.array(x_probs)
-    #
-    #         # the true y is same for all classifiers
-    #         y = trained_models[clfs[0]].y.values
-    #
-    #         # train-test split
-    #         x_train_preds, x_test_preds, y_train_preds, y_test_preds = train_test_split(x_preds, y, test_size=0.2)
-    #         x_train_probs, x_test_probs, y_train_probs, y_test_probs = train_test_split(x_probs, y, test_size=0.2)
-    #
-    #         # defining meta-classifier for preds
-    #         meta_clf_preds = LogisticRegression()
-    #         meta_clf_preds = meta_clf_preds.fit(x_train_preds, y_train_preds)
-    #         yhat_preds = meta_clf_preds.predict(x_test_preds)
-    #         yhat_preds_probs = meta_clf_preds.predict_proba(x_test_preds)
-    #
-    #         score = meta_clf_preds.score(x_test_preds, y_test_preds)
-    #         accuracy_score(y_test_preds, yhat_preds)
-    #
-    #         meta_clf_probs = LogisticRegression()
-    #         meta_clf_probs = meta_clf_probs.fit(x_train_probs, y_train_probs)
-    #         yhat_probs = meta_clf_probs.predict(x_test_probs)
-    #         yhat_probs_probs = meta_clf_probs.predict_proba(x_test_probs)
-    #
-    #         score2 = meta_clf_probs.score(x_test_probs, y_test_probs)
-
-
     @staticmethod
     def compute_save_results(y_true: np.ndarray, y_pred: np.ndarray, y_prob: np.ndarray,
                              acc_saved=None, fms_saved=None, roc_saved=None,
@@ -302,7 +178,6 @@ class Trainer:
         spec_saved.append(tn / (tn + fp))
 
         return acc_saved, fms_saved, roc_saved, precision_saved, recall_saved, spec_saved
-
 
     def save_results(self, method: str = 'default', acc=None, fms=None, roc=None,
                      precision=None, recall=None, specificity=None,
