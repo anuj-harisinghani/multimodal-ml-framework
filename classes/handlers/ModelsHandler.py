@@ -7,6 +7,9 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import BaggingClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 
+import warnings
+warnings.filterwarnings("ignore")
+
 
 class ModelsHandler:
     def __init__(self):

@@ -5,22 +5,25 @@ import os
 import csv
 import pandas as pd
 import operator
-
+import warnings
+warnings.filterwarnings("ignore")
 
 class CrossValidator:
-    def __init__(self, mode: str, seed: int, classifiers: list):
+    def __init__(self, mode: str, classifiers: list):
         self.__trainer = None
         self.mode = mode
-        self.seed = seed
+        self.seed = None
         self.classifiers = classifiers
         self.dataset_name = None
 
-    def cross_validate(self, tasks_data: dict):
+    def cross_validate(self, seed: int, tasks_data: dict):
         """
+        :param seed: seed
         :param tasks_data: dictionary that contains data from each task
         :return: nothing
         """
 
+        self.seed = seed
         settings = ParamsHandler.load_parameters('settings')
         self.dataset_name = settings['dataset']
         aggregation_method = settings['aggregation_method']
@@ -63,8 +66,8 @@ class CrossValidator:
 
             # running the trainer for each of the tasks
             for task in tasks_data.keys():
-                print("\nTask: ", task)
-                print("---------------")
+                # print("\nTask: ", task)
+                # print("---------------")
 
                 trained_models_task = []
                 task_path = os.path.join(self.dataset_name, task)
@@ -133,8 +136,8 @@ class CrossValidator:
             trained_models = []
 
             for task in tasks_data.keys():
-                print("\nTask: ", task)
-                print("---------------")
+                # print("\nTask: ", task)
+                # print("---------------")
 
                 task_stacked = {}
                 trained_models_task = []

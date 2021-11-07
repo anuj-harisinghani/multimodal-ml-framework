@@ -2,6 +2,10 @@ from classes.trainer.Trainer import Trainer
 from classes.handlers.ModelsHandler import ModelsHandler
 from classes.factories.DataSplitterFactory import DataSplitterFactory
 
+from tqdm import tqdm
+import warnings
+warnings.filterwarnings("ignore")
+
 
 class StackingTrainer(Trainer):
     def __init__(self):
@@ -35,8 +39,8 @@ class StackingTrainer(Trainer):
         splitter = DataSplitterFactory().get(self.aggregation_method)
         self.splits = splitter.make_splits(data=data, seed=self.seed)
 
-        for idx, fold in enumerate(self.splits):
-            print("Processing fold: %i" % idx)
+        for idx, fold in enumerate(tqdm(self.splits, desc='Stacking Trainer')):
+            # print("Processing fold: %i" % idx)
             x_train, y_train = fold['x_train'], fold['y_train'].ravel()
             x_test, y_test = fold['x_test'], fold['y_test'].ravel()
             labels_train, labels_test = fold['train_labels'], fold['test_labels']

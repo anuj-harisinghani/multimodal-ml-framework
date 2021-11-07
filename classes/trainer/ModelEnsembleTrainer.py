@@ -4,6 +4,9 @@ from classes.handlers.ModelsHandler import ModelsHandler
 from classes.factories.DataSplitterFactory import DataSplitterFactory
 
 import numpy as np
+from tqdm import tqdm
+import warnings
+warnings.filterwarnings("ignore")
 
 
 class ModelEnsembleTrainer(Trainer):
@@ -36,10 +39,10 @@ class ModelEnsembleTrainer(Trainer):
         feature_scores_fold = []
         k_range = None
 
-        print("Model %s" % self.clf)
-        print("=========================")
+        # print("Model %s" % self.clf)
+        # print("=========================")
 
-        for idx, fold in enumerate(self.splits):
+        for idx, fold in enumerate(tqdm(self.splits, desc=self.clf)):
             # print("Processing fold: %i" % idx)
             x_train, y_train = fold['x_train'], fold['y_train'].ravel()
             x_test, y_test = fold['x_test'], fold['y_test'].ravel()
