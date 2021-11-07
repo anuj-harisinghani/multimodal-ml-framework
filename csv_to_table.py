@@ -8,6 +8,7 @@ import pandas as pd
 import sys
 import os
 
+
 def main():
     pm = u"\u00B1"
     filename = sys.argv[1]
@@ -73,5 +74,5 @@ def main():
 
     doc.generate_pdf(filename, clean_tex=False, compiler='pdflatex')
 
-main()
 
+main()

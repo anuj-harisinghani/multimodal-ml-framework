@@ -3,6 +3,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.dummy import DummyClassifier
 
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import BaggingClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+
 
 class ModelsHandler:
     def __init__(self):
@@ -22,6 +26,12 @@ class ModelsHandler:
                 models.append(LogisticRegression())
             elif model == 'dummy':
                 models.append(DummyClassifier())
+            elif model == 'AdaBoost':
+                models.append(AdaBoostClassifier())
+            elif model == 'Bagging':
+                models.append(BaggingClassifier())
+            elif model == 'GradBoost':
+                models.append(GradientBoostingClassifier())
             else:
                 raise ("invalid classifier: %s", model)
         return models
@@ -36,5 +46,11 @@ class ModelsHandler:
             return LogisticRegression()
         elif classifier == 'dummy':
             return DummyClassifier()
+        elif classifier == 'AdaBoost':
+            return AdaBoostClassifier()
+        elif classifier == 'Bagging':
+            return BaggingClassifier()
+        elif classifier == 'GradBoost':
+            return GradientBoostingClassifier()
         else:
             raise ("invalid classifier: %s", classifier)
