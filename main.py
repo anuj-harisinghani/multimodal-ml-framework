@@ -37,7 +37,7 @@ def main():
     #     cv.cross_validate(seed=seed, tasks_data=tasks_data)
 
     # multiprocessing - change number of cpu cores to use based on preference
-    cpu_count = os.cpu_count()//2
+    cpu_count = os.cpu_count()
     pool = Pool(processes=cpu_count)
     cv = [pool.apply_async(CrossValidator(mode, classifiers).cross_validate, args=(seed, tasks_data)) for seed in
           range(seeds)]

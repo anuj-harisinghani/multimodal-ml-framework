@@ -1,2 +1,0 @@
-settings,model,acc,roc,f1,precision,recall,specificity,acc_sd,f1_sd,prec_sd,rec_sd,roc_sd,spec_sd
-_ET_Basic,one,0.65,0.67,0.64,0.65,0.68,0.63,0.02,0.03,0.02,0.05,0.03,0.04

@@ -1,7 +1,0 @@
-settings,model,acc,roc,f1,precision,recall,specificity,acc_sd,f1_sd,prec_sd,rec_sd,roc_sd,spec_sd
-_NLP_Reading,RandomForest,0.69,0.75,0.64,0.69,0.63,0.75,0.02,0.03,0.04,0.04,0.02,0.02
-_NLP_Reading,GausNaiveBayes,0.69,0.75,0.56,0.81,0.45,0.9,0.01,0.03,0.05,0.03,0.02,0.02
-_NLP_Reading,LogReg,0.73,0.76,0.7,0.76,0.68,0.78,0.03,0.03,0.03,0.03,0.02,0.03
-_Eye_Reading,RandomForest,0.66,0.75,0.6,0.66,0.59,0.72,0.03,0.03,0.05,0.04,0.03,0.03
-_Eye_Reading,GausNaiveBayes,0.65,0.72,0.53,0.69,0.46,0.81,0.01,0.02,0.05,0.02,0.02,0.01
-_Eye_Reading,LogReg,0.68,0.73,0.62,0.69,0.6,0.75,0.01,0.02,0.01,0.02,0.02,0.01
