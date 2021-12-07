@@ -146,4 +146,4 @@ class StackingDataSplitter(DataSplitter):
             fold['test_labels'] = labels[test_index]
             fold_data.append(fold)
 
-        return fold_data
+        return fold_data, x, y

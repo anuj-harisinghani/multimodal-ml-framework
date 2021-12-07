@@ -53,17 +53,21 @@ class ResultsHandler:
                             precision = model_info[model_info[METRICS] == PRECISION]['1'].mean()
                             recall = model_info[model_info[METRICS] == RECALL]['1'].mean()
                             specificity = model_info[model_info[METRICS] == SPECIFICITY]['1'].mean()
-                            
+
+                            setting = filename[:-4].split('_')[-1] + suffix
+                            if filename[:-4].split('_')[-2] == 'Eye' or filename[:-4].split('_')[-2] == 'NLP':
+                                setting = filename[:-4].split('_')[-2] + '_Reading' + suffix
+
                             results_csv = results_csv.append({
-                                SETTINGS: filename[:-4].split('_')[-1] + suffix,
-                                MODEL: model,
-                                ACCURACY: acc,
-                                ROC: roc,
-                                F1_SCORE: f1_score,
-                                PRECISION: precision,
-                                RECALL: recall,
-                                SPECIFICITY: specificity
-                            }, ignore_index=True)
+                                    SETTINGS: setting,
+                                    MODEL: model,
+                                    ACCURACY: acc,
+                                    ROC: roc,
+                                    F1_SCORE: f1_score,
+                                    PRECISION: precision,
+                                    RECALL: recall,
+                                    SPECIFICITY: specificity
+                                }, ignore_index=True)
         
         ResultsHandler.average_seeds(results_csv, dataset_name, foldername)
 

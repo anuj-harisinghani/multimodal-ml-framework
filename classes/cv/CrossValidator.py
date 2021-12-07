@@ -8,6 +8,7 @@ import operator
 import warnings
 warnings.filterwarnings("ignore")
 
+
 class CrossValidator:
     def __init__(self, mode: str, classifiers: list):
         self.__trainer = None
@@ -36,8 +37,8 @@ class CrossValidator:
         # running trainer for each of the tasks
         if self.mode == 'single_tasks':
             for task in tasks_data.keys():
-                print("\nTask: ", task)
-                print("---------------")
+                # print("\nTask: ", task)
+                # print("---------------")
 
                 task_path = os.path.join(self.dataset_name, task)
                 task_params = ParamsHandler.load_parameters(task_path)
@@ -106,7 +107,8 @@ class CrossValidator:
                 trained_models_results = {}
                 for clf in self.classifiers:
                     self.__trainer = TrainersFactory().get(self.mode)
-                    trained_models_results[clf] = self.__trainer.calculate_task_fusion_results(data=trained_models_task[0][clf])
+                    trained_models_results[clf] = self.__trainer.\
+                        calculate_task_fusion_results(data=trained_models_task[0][clf])
 
                 CrossValidator.save_results(self, trained_models=trained_models_results, feature_set=task,
                                             prefix=prefixes[self.mode], method=method, save_to_csv=True,
@@ -121,7 +123,8 @@ class CrossValidator:
             final_trained_models_results = {}
             for clf in self.classifiers:
                 self.__trainer = TrainersFactory().get(self.mode)
-                final_trained_models_results[clf] = self.__trainer.calculate_task_fusion_results(data=final_trained_models[clf])
+                final_trained_models_results[clf] = \
+                    self.__trainer.calculate_task_fusion_results(data=final_trained_models[clf])
 
             # saving results after full aggregation
             CrossValidator.save_results(self, trained_models=final_trained_models_results, feature_set='',
@@ -201,6 +204,83 @@ class CrossValidator:
             CrossValidator.save_results(self, trained_models=final_stacked, feature_set='',
                                         prefix=prefixes[self.mode], method=self.mode, save_to_csv=True,
                                         get_prediction=True, feature_importance=feature_importance)
+
+        # elif self.mode == 'saa':
+        #     final_stacked = {}
+        #     trained_models = []
+        #
+        #     for task in tasks_data.keys():
+        #         # print("\nTask: ", task)
+        #         # print("---------------")
+        #
+        #         task_stacked = {}
+        #         trained_models_task = []
+        #         task_path = os.path.join(self.dataset_name, task)
+        #         task_params = ParamsHandler.load_parameters(task_path)
+        #         feature_sets = task_params['features']
+        #
+        #         # modality_stacked = {}
+        #         for modality, modality_data in tasks_data[task].items():
+        #             modality_stacked = {}
+        #             modality_feature_set = list(feature_sets[modality].keys())[0]
+        #
+        #             trained_models_modality = {}
+        #             for clf in self.classifiers:
+        #                 trainer = TrainersFactory().get(self.mode)
+        #                 trained_models_modality[clf] = trainer.train(data=modality_data, clf=clf,
+        #                                                              feature_set=modality_feature_set,
+        #                                                              feature_importance=False, seed=self.seed)
+        #
+        #             modality_meta_trainer = TrainersFactory().get(aggregation_method)
+        #             modality_stacked[modality_feature_set] = modality_meta_trainer.train(data=trained_models_modality,
+        #                                                                                  clf=meta_clf,
+        #                                                                                  seed=self.seed,
+        #                                                                                  feature_set=modality_feature_set,
+        #                                                                                  feature_importance=False)
+        #
+        #             CrossValidator.save_results(self, trained_models=modality_stacked,
+        #                                         feature_set=modality_feature_set,
+        #                                         prefix=prefixes[self.mode], method=self.mode, save_to_csv=True,
+        #                                         get_prediction=True, feature_importance=feature_importance)
+        #
+        #             trained_models_task.append(modality_stacked)
+        #
+        #         # aggregating modality-wise results to make task-level results
+        #         if len(trained_models_task) > 1:
+        #             data = {}
+        #             for clf in self.classifiers:
+        #                 data[clf] = self.__trainer.average_results(data=trained_models_task, model=clf)
+        #             trained_models_task = [data]
+        #
+        #         trained_models.append(trained_models_task[0])
+        #
+        #         # re-calculating post-averaging metrics
+        #         trained_models_results = {}
+        #         for clf in self.classifiers:
+        #             self.__trainer = TrainersFactory().get(self.mode)
+        #             trained_models_results[clf] = self.__trainer.calculate_task_fusion_results(
+        #                 data=trained_models_task[0][clf])
+        #
+        #         CrossValidator.save_results(self, trained_models=trained_models_results, feature_set=task,
+        #                                     prefix=prefixes[self.mode], method=self.mode, save_to_csv=True,
+        #                                     get_prediction=True, feature_importance=feature_importance)
+        #
+        #         # compiling the data from all tasks here then aggregating them
+        #     final_trained_models = {}
+        #     for clf in self.classifiers:
+        #         final_trained_models[clf] = self.__trainer.average_results(data=trained_models, model=clf)
+        #
+        #     # recalculating metrics and results after aggregation
+        #     final_trained_models_results = {}
+        #     for clf in self.classifiers:
+        #         self.__trainer = TrainersFactory().get(self.mode)
+        #         final_trained_models_results[clf] = \
+        #             self.__trainer.calculate_task_fusion_results(data=final_trained_models[clf])
+        #
+        #     # saving results after full aggregation
+        #     CrossValidator.save_results(self, trained_models=final_trained_models_results, feature_set='',
+        #                                 prefix=prefixes[self.mode], method=self.mode, save_to_csv=True,
+        #                                 get_prediction=True, feature_importance=feature_importance)
 
     def save_results(self, trained_models, feature_set, prefix, method='default',
                      save_to_csv=False, get_prediction=False, feature_importance=False):

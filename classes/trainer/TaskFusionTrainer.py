@@ -8,6 +8,7 @@ import numpy as np
 import random
 import os
 import pandas as pd
+from tqdm import tqdm
 
 
 class TaskFusionTrainer(Trainer):
@@ -52,11 +53,7 @@ class TaskFusionTrainer(Trainer):
         # feature_scores_fold = []
         k_range = None
 
-        print("Model %s" % self.clf)
-        print("=========================")
-
-        for idx, fold in enumerate(self.splits):
-            print("Processing fold: %i" % idx)
+        for idx, fold in enumerate(tqdm(self.splits, desc=self.clf)):
             x_train, y_train = fold['x_train'], fold['y_train'].ravel()
             x_test, y_test = fold['x_test'], fold['y_test'].ravel()
             labels_train, labels_test = fold['train_labels'], fold['test_labels']
@@ -117,77 +114,5 @@ class TaskFusionTrainer(Trainer):
         #         self.save_feature_importance(X=self.X, y=self.y,
         #                                      model_name=model, model=None, feature_names=feature_names)
         '''
-
-        return self
-
-    def calculate_task_fusion_results(self, data):
-        acc = []
-        fms = []
-        roc = []
-        precision = []
-        recall = []
-        specificity = []
-
-        params = ParamsHandler.load_parameters('settings')
-        output_folder = params["output_folder"]
-        extraction_method = params["PID_extraction_method"]
-        nfolds = params['folds']
-
-        # get list of superset_ids from the saved file
-        super_pids_file_path = os.path.join('results', output_folder, extraction_method + '_super_pids.csv')
-        superset_ids = list(pd.read_csv(super_pids_file_path)['interview'])
-
-        # random shuffle based on random seed
-        random.Random(self.seed).shuffle(superset_ids)
-        splits = np.array_split(superset_ids, nfolds)
-
-        method = 'task_fusion'
-        pred = data.preds[method]
-        pred_prob = data.pred_probs[method]
-        k_range = data.best_k[method]['k_range']
-
-        # compute performance measures for each of the splits
-        for i in splits:
-            acc_scores = []
-            fms_scores = []
-            roc_scores = []
-            p_scores = []  # precision
-            r_scores = []  # recall
-            spec_scores = []  # specificity
-
-            # get the prediction probabilities, predicted outcomes, and labels for each of the PIDs in this split
-            y_true_sub = []
-            y_pred_sub = []
-            y_prob_sub = []
-
-            for j in i:
-                if j in data.y.keys():
-                    y_true_sub.append(data.y[j])
-                    y_pred_sub.append(data.preds[method][j])
-                    y_prob_sub.append(data.pred_probs[method][j])
-
-            y_true_sub = np.array(y_true_sub)
-            y_pred_sub = np.array(y_pred_sub)
-            y_prob_sub = np.array(y_prob_sub)
-
-            # calculate the performance metrics at the fold level
-            acc_scores, fms_scores, roc_scores, p_scores, r_scores, spec_scores = \
-                self.compute_save_results(y_true=y_true_sub, y_pred=y_pred_sub,
-                                          y_prob=y_prob_sub[:, 1], acc_saved=acc_scores,
-                                          fms_saved=fms_scores, roc_saved=roc_scores,
-                                          precision_saved=p_scores, recall_saved=r_scores, spec_saved=spec_scores)
-
-            # saving performance metrics for each fold
-            acc.append(acc_scores)
-            fms.append(fms_scores)
-            roc.append(roc_scores)
-            precision.append(p_scores)
-            recall.append(r_scores)
-            specificity.append(spec_scores)
-
-        # save performance metrics
-        self.save_results(method, acc=acc, fms=fms, roc=roc,
-                          precision=precision, recall=recall, specificity=specificity,
-                          pred=pred, pred_prob=pred_prob, k_range=k_range)
 
         return self

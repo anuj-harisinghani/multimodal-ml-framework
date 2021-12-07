@@ -40,7 +40,8 @@ class FusionDataSplitter(DataSplitter):
             random.Random(self.random_seed).shuffle(superset_ids)
             splits = np.array_split(superset_ids, self.nfolds)
 
-        # option 2: Split an intersection of pids across tasks, then split the out-of-intersection pids, then merge them equally
+        # option 2: Split an intersection of pids across tasks, then split the out-of-intersection pids
+        # then merge them equally
         if method == 2:
             pid_file_paths = {task: os.path.join('results', output_folder, extraction_method + '_' + task + '_pids.csv') for task in tasks}
             pids = [list(pd.read_csv(pid_file_paths[task])['interview']) for task in tasks]

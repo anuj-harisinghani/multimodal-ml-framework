@@ -2,12 +2,11 @@ from classes.handlers.ParamsHandler import ParamsHandler
 from classes.handlers.ModelsHandler import ModelsHandler
 
 import numpy as np
+import random
+import os
+import pandas as pd
 from sklearn.metrics import f1_score, accuracy_score, roc_auc_score, precision_score, recall_score, confusion_matrix
-from sklearn.model_selection import train_test_split
 
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.ensemble import StackingClassifier
-from sklearn.linear_model import LogisticRegression
 """
 Abstract class Trainer
 """
@@ -62,51 +61,130 @@ class Trainer:
         """
         pass
 
-    @staticmethod
-    def calculate_task_fusion_results(data):
+    def calculate_task_fusion_results(self, data):
         """
-        (abstract) calculate_task_fusion_results -> function to recalculate metrics after averaging (only called for fusion)
         :param data: data after averaging
         :return: object with recalculated metrics
         """
-        pass
+        acc = []
+        fms = []
+        roc = []
+        precision = []
+        recall = []
+        specificity = []
+
+        params = ParamsHandler.load_parameters('settings')
+        extraction_method = params["PID_extraction_method"]
+        nfolds = params['folds']
+        dataset_name = params['dataset']
+
+        # get list of superset_ids from the saved file
+        super_pids_file_path = os.path.join(os.getcwd(), 'assets', dataset_name, 'PIDs', self.mode +
+                                            '_' + extraction_method + '_super_pids.csv')
+        superset_ids = list(pd.read_csv(super_pids_file_path)['interview'])
+
+        # random shuffle based on random seed
+        random.Random(self.seed).shuffle(superset_ids)
+        splits = np.array_split(superset_ids, nfolds)
+
+        # method = self.mode
+        method = 'task_fusion'
+        pred = data.preds[method]
+        pred_prob = data.pred_probs[method]
+        k_range = data.best_k[method]['k_range']
+
+        # compute performance measures for each of the splits
+        for i in splits:
+            acc_scores = []
+            fms_scores = []
+            roc_scores = []
+            p_scores = []  # precision
+            r_scores = []  # recall
+            spec_scores = []  # specificity
+
+            # get the prediction probabilities, predicted outcomes, and labels for each of the PIDs in this split
+            y_true_sub = []
+            y_pred_sub = []
+            y_prob_sub = []
+
+            for j in i:
+                if j in data.y.keys():
+                    y_true_sub.append(data.y[j])
+                    y_pred_sub.append(data.preds[method][j])
+                    y_prob_sub.append(data.pred_probs[method][j])
+
+            y_true_sub = np.array(y_true_sub)
+            y_pred_sub = np.array(y_pred_sub)
+            y_prob_sub = np.array(y_prob_sub)
+
+            # calculate the performance metrics at the fold level
+            acc_scores, fms_scores, roc_scores, p_scores, r_scores, spec_scores = \
+                self.compute_save_results(y_true=y_true_sub, y_pred=y_pred_sub,
+                                          y_prob=y_prob_sub[:, 1], acc_saved=acc_scores,
+                                          fms_saved=fms_scores, roc_saved=roc_scores,
+                                          precision_saved=p_scores, recall_saved=r_scores, spec_saved=spec_scores)
+
+            # saving performance metrics for each fold
+            acc.append(acc_scores)
+            fms.append(fms_scores)
+            roc.append(roc_scores)
+            precision.append(p_scores)
+            recall.append(r_scores)
+            specificity.append(spec_scores)
+
+        # save performance metrics
+        self.save_results(method, acc=acc, fms=fms, roc=roc,
+                          precision=precision, recall=recall, specificity=specificity,
+                          pred=pred, pred_prob=pred_prob, k_range=k_range)
+
+        return self
 
     @staticmethod
-    def average_results(data: list, model) -> object:
+    def average_results(data, model) -> object:
         """
         :param data: list of Trainer objects that contain attributes pred_probs, preds, etc.
-        :param model: classifier for which the aggregation is to be done (only used to refer to a particular entry in the dictionary)
+        :param model: classifier for which the aggregation is to be done (only used to refer to a particular entry
+        in the dictionary)
         :return: Trainer object with updated values
         """
-
-        method = 'task_fusion'
         avg_preds = {}
         avg_pred_probs = {}
-
         sub_data = None
         num = 0
         new_data = None
+        method = None
 
-        # this portion gets activated when across_tasks or across modalities aggregation is required
-        # since the model being passed is a single model (either GNB, or RF, or LR)
-        if type(model) == str:
-            new_data = data[-1][model]
+        if type(data) == list:
+            method = 'task_fusion'
+
+            # this portion gets activated when across_tasks or across modalities aggregation is required
+            # since the model being passed is a single model (either GNB, or RF, or LR)
+            if type(model) == str:
+                new_data = data[-1][model]
+                num = len(data)
+                sub_data = np.array([data[t][model] for t in range(num)])
+
+            # this portion gets activated when within_tasks aggregation is required
+            # since the models being passed will be more than one
+            elif type(model) == list:
+                new_data = data[model[-1]]
+                num = len(model)
+                sub_data = np.array([data[m] for m in model])
+
+        elif type(data) == dict:
+            method = 'ensemble'
+            data = list(data.values())
+
+            new_data = data[-1]
             num = len(data)
-            sub_data = np.array([data[t][model] for t in range(num)])
-
-        # this portion gets activated when within_tasks aggregation is required
-        # since the models being passed will be more than one
-        elif type(model) == list:
-            new_data = data[model[-1]]
-            num = len(model)
-            sub_data = np.array([data[m] for m in model])
+            sub_data = np.array([data[t] for t in range(num)])
 
         # sub_data will hold all the DementiaCV instances for a particular model, across all tasks
         # so for task='PupilCalib+CookieTheft+Reading+Memory':
         #        sub_data[0] = DementiaCV class for PupilCalib, some model
         #        sub_data[1] = DementiaCV class for CookieTheft, some model.. so on.
 
-        # pred_probs --------------------------------------------------------------------------------------------------
+        # pred_probs ---------------------------------------------------------------------------------------
 
         # find the union of all pids across all tasks
         union_pids = np.unique(np.concatenate([list(sub_data[i].pred_probs[method].keys()) for i in range(num)]))
@@ -120,12 +198,13 @@ class Trainer:
                     pred_probs_sum_list[0] += sub_data[t].pred_probs[method][i][0]
                     pred_probs_sum_list[1] += sub_data[t].pred_probs[method][i][1]
                     pred_probs_sum_list[2] += 1
-            pred_probs_dict[i] = np.array([pred_probs_sum_list[0] / pred_probs_sum_list[2], pred_probs_sum_list[1] / pred_probs_sum_list[2]])
+            pred_probs_dict[i] = np.array([pred_probs_sum_list[0] / pred_probs_sum_list[2],
+                                           pred_probs_sum_list[1] / pred_probs_sum_list[2]])
 
         avg_pred_probs[method] = pred_probs_dict
         new_data.pred_probs = avg_pred_probs
 
-        # preds ------------------------------------------------------------------------------------------------------
+        # preds --------------------------------------------------------------------------------------------
 
         # assigning True or False for preds based on what the averaged pred_probs were found in the previous step
         preds_dict = {}
@@ -135,7 +214,8 @@ class Trainer:
         avg_preds[method] = preds_dict
         new_data.preds = avg_preds
 
-        # returned the updated new_data - only pred_probs and preds are changed, the rest are the same as the initially chosen new_data
+        # returned the updated new_data - only pred_probs and preds are changed, the rest are the same as
+        # the initially chosen new_data
         return new_data
 
     @staticmethod

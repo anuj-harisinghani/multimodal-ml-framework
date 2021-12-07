@@ -32,12 +32,10 @@ class StackingTrainer(Trainer):
         pred_prob = {}
         feature_scores_fold = []
 
-        # k_range = range(len(clfs))  # placeholder value for k-range so that it does something
-
         k_range = list(data[some_clf].best_k.values())[0]['k_range']
 
         splitter = DataSplitterFactory().get(self.aggregation_method)
-        self.splits = splitter.make_splits(data=data, seed=self.seed)
+        self.splits, self.x, self.y = splitter.make_splits(data=data, seed=self.seed)
 
         for idx, fold in enumerate(tqdm(self.splits, desc='Stacking Trainer')):
             # print("Processing fold: %i" % idx)
@@ -63,62 +61,6 @@ class StackingTrainer(Trainer):
             for i in range(labels_test.shape[0]):
                 pred[labels_test[i]] = yhat_preds[i]
                 pred_prob[labels_test[i]] = yhat_pred_probs[i]
-
-            # # training data extraction
-            # pids_train = list(data[some_clf].fold_preds_train[idx].keys())
-            # labels_train = data[some_clf].splits[idx]['train_labels']
-            #
-            # train_preds_fold = {pid: [data[clf].fold_preds_train[idx][pid] for clf in clfs] for pid in pids_train}
-            # train_x_preds_fold = np.array(list(train_preds_fold.values()))
-            # train_y_preds_fold = data[some_clf].splits[idx]['y_train']
-            #
-            # # test data extraction
-            # pids_test = list(data[some_clf].fold_preds_test[idx].keys())
-            # labels_test = data[some_clf].splits[idx]['test_labels']
-            #
-            # test_preds_fold = {pid: [data[clf].fold_preds_test[idx][pid] for clf in clfs] for pid in pids_test}
-            # test_x_preds_fold = np.array(list(test_preds_fold.values()))
-            # test_y_preds_fold = data[some_clf].splits[idx]['y_test']
-            #
-            # # fit the meta classifier
-            # meta_model = ModelsHandler().get_model(clf)
-            # meta_model = meta_model.fit(train_x_preds_fold, train_y_preds_fold)
-            #
-            # # make predictions
-            # yhat_preds = meta_model.predict(test_x_preds_fold)
-            # yhat_preds_probs = meta_model.predict_proba(test_x_preds_fold)
-            # # print('Stacking: ', accuracy_score(yhat_preds, test_y_preds_fold))
-            #
-            # # make training predictions
-            # yhat_train = meta_model.predict(train_x_preds_fold)
-            # yhat_train_probs = meta_model.predict_proba(train_x_preds_fold)
-            #
-            # # for stacking in the next level
-            # pred_train = {}
-            # pred_prob_train = {}
-            # pred_test = {}
-            # pred_prob_test = {}
-            #
-            # # predictions train data for stacking
-            # for i in range(labels_train.shape[0]):
-            #     pred_train[labels_train[i]] = yhat_train[i]
-            #     pred_prob_train[labels_train[i]] = yhat_train_probs[i]
-            #
-            # self.fold_preds_train.append(pred_train)
-            # self.fold_pred_probs_train.append(pred_prob_train)
-            #
-            # # predictions test data for stacking, and normal
-            # for i in range(labels_test.shape[0]):
-            #     pred[labels_test[i]] = yhat_preds[i]
-            #     pred_prob[labels_test[i]] = yhat_preds_probs[i]
-            #
-            #     pred_test[labels_test[i]] = yhat_preds[i]
-            #     pred_prob_train[labels_test[i]] = yhat_preds_probs[i]
-            #
-            # self.fold_preds_test.append(pred_test)
-            # self.fold_pred_probs_test.append(pred_prob_test)
-
-            # calculating metrics for each fold
 
             acc_scores, fms_scores, roc_scores, p_scores, r_scores, spec_scores = \
                 self.compute_save_results(y_true=y_test, y_pred=yhat_preds,

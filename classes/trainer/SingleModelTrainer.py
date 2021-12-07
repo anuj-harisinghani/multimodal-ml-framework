@@ -3,8 +3,10 @@ from classes.cv.FeatureSelector import FeatureSelector
 from classes.handlers.ModelsHandler import ModelsHandler
 from classes.factories.DataSplitterFactory import DataSplitterFactory
 
-
 import numpy as np
+from tqdm import tqdm
+import warnings
+warnings.filterwarnings("ignore")
 
 
 class SingleModelTrainer(Trainer):
@@ -35,7 +37,6 @@ class SingleModelTrainer(Trainer):
         splitter = DataSplitterFactory().get(mode=self.mode)
         self.splits = splitter.make_splits(data=data, seed=self.seed)
 
-
         # defining metrics
         acc = []
         fms = []
@@ -49,11 +50,11 @@ class SingleModelTrainer(Trainer):
         feature_scores_fold = []
         k_range = None
 
-        print("Model %s" % self.clf)
-        print("=========================")
+        # print("Model %s" % self.clf)
+        # print("=========================")
 
-        for idx, fold in enumerate(self.splits):
-            print("Processing fold: %i" % idx)
+        for idx, fold in enumerate(tqdm(self.splits, desc=self.clf)):
+            # print("Processing fold: %i" % idx)
             x_train, y_train = fold['x_train'], fold['y_train'].ravel()
             x_test, y_test = fold['x_test'], fold['y_test'].ravel()
             labels_train, labels_test = fold['train_labels'], fold['test_labels']
@@ -81,8 +82,8 @@ class SingleModelTrainer(Trainer):
                 pred[labels_test[i]] = yhat[i]
                 pred_prob[labels_test[i]] = yhat_probs[i]
 
-            self.preds.append(pred)
-            self.pred_probs.append(pred_prob)
+            # self.preds.append(pred)
+            # self.pred_probs.append(pred_prob)
 
             # calculating metrics for each fold
             acc_scores, fms_scores, roc_scores, p_scores, r_scores, spec_scores = \
