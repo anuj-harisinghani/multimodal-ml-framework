@@ -29,7 +29,7 @@ class TaskFusionTrainer(Trainer):
 
     def train(self, data: dict, clf: str, seed: int, feature_set: str = '', feature_importance: bool = True):
         self.clf = clf
-        self.method = 'task_fusion'
+        self.method = 'fusion'
         self.seed = seed
 
         self.x = data['x']
@@ -70,7 +70,7 @@ class TaskFusionTrainer(Trainer):
                 FeatureSelector().select_features(fold_data=fold, feature_names=feature_names, k_range=k_range)
 
             # fit the model
-            model = ModelsHandler.get_model(clf)
+            model = ModelsHandler().get_model(clf)
             model = model.fit(x_train_fs, y_train)
 
             # make predictions

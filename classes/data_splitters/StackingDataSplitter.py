@@ -53,9 +53,10 @@ class StackingDataSplitter(DataSplitter):
         for p in range(len(superset_ids)):
             x[p][0] = y[p][0] = labels[p] = superset_ids[p]
             for k, tr in enumerate(data.values()):
-                pids = list(tr.preds['ensemble'].keys())
+                meth = list(tr.preds.keys())[0]
+                pids = list(tr.preds[meth].keys())
                 if superset_ids[p] in pids:
-                    x[p][k+1] = tr.preds['ensemble'][superset_ids[p]]
+                    x[p][k+1] = tr.preds[meth][superset_ids[p]]
                     y[p][1] = true_y[superset_ids[p]]
 
         # now, for some modalities where the number of PIDs are less than the union (162), the 'within modality' x will

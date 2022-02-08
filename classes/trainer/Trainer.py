@@ -1,5 +1,4 @@
 from classes.handlers.ParamsHandler import ParamsHandler
-from classes.handlers.ModelsHandler import ModelsHandler
 
 import numpy as np
 import random
@@ -87,8 +86,8 @@ class Trainer:
         random.Random(self.seed).shuffle(superset_ids)
         splits = np.array_split(superset_ids, nfolds)
 
-        # method = self.mode
-        method = 'task_fusion'
+        method = self.mode
+        # method = 'task_fusion'
         pred = data.preds[method]
         pred_prob = data.pred_probs[method]
         k_range = data.best_k[method]['k_range']
@@ -139,8 +138,8 @@ class Trainer:
 
         return self
 
-    @staticmethod
-    def average_results(data, model) -> object:
+    # @staticmethod
+    def average_results(self, data, model) -> object:
         """
         :param data: list of Trainer objects that contain attributes pred_probs, preds, etc.
         :param model: classifier for which the aggregation is to be done (only used to refer to a particular entry
@@ -152,11 +151,9 @@ class Trainer:
         sub_data = None
         num = 0
         new_data = None
-        method = None
+        method = self.mode
 
-        if type(data) == list:
-            method = 'task_fusion'
-
+        if method == 'fusion':
             # this portion gets activated when across_tasks or across modalities aggregation is required
             # since the model being passed is a single model (either GNB, or RF, or LR)
             if type(model) == str:
@@ -164,20 +161,56 @@ class Trainer:
                 num = len(data)
                 sub_data = np.array([data[t][model] for t in range(num)])
 
-            # this portion gets activated when within_tasks aggregation is required
-            # since the models being passed will be more than one
-            elif type(model) == list:
+            elif type(data) == dict and type(model) == list:
                 new_data = data[model[-1]]
                 num = len(model)
                 sub_data = np.array([data[m] for m in model])
 
-        elif type(data) == dict:
-            method = 'ensemble'
+            elif model is None:
+                data = list(data.values())
+
+                new_data = data[-1]
+                num = len(data)
+                sub_data = np.array([data[t] for t in range(num)])
+
+        elif method == 'stack' or method == 'ensemble':
             data = list(data.values())
 
             new_data = data[-1]
             num = len(data)
             sub_data = np.array([data[t] for t in range(num)])
+
+        # if type(data) == list:
+        #     # method = 'fusion'
+        #
+        #     # this portion gets activated when across_tasks or across modalities aggregation is required
+        #     # since the model being passed is a single model (either GNB, or RF, or LR)
+        #     if type(model) == str:
+        #         new_data = data[-1][model]
+        #         num = len(data)
+        #         sub_data = np.array([data[t][model] for t in range(num)])
+        #
+        #     # this portion gets activated when within_tasks aggregation is required
+        #     # since the models being passed will be more than one
+        #     elif type(model) == list:
+        #         new_data = data[model[-1]]
+        #         num = len(model)
+        #         sub_data = np.array([data[m] for m in model])
+        #
+        # elif type(data) == dict:
+        #     if type(model) == list:
+        #         # method = 'fusion'
+        #         new_data = data[model[-1]]
+        #         num = len(model)
+        #         sub_data = np.array([data[m] for m in model])
+        #
+        #     else:
+        #         # method = 'ensemble'
+        #         data = list(data.values())
+        #
+        #         new_data = data[-1]
+        #         num = len(data)
+        #         sub_data = np.array([data[t] for t in range(num)])
 
         # sub_data will hold all the DementiaCV instances for a particular model, across all tasks
         # so for task='PupilCalib+CookieTheft+Reading+Memory':

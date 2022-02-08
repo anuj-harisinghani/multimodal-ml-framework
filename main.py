@@ -4,7 +4,7 @@ from classes.handlers.ParamsHandler import ParamsHandler
 from classes.handlers.ResultsHandler import ResultsHandler
 
 import os
-from multiprocessing import Process, Pool
+from multiprocessing import Pool
 import warnings
 warnings.filterwarnings("ignore")
 

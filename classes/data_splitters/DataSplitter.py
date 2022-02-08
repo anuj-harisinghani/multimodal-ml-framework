@@ -7,6 +7,7 @@ class DataSplitter:
         self.random_seed = None
         self.mode = params['mode']
         self.nfolds = params['folds']
+        self.method = self.mode
 
     def make_splits(self, data: dict, seed: int) -> list:
         """

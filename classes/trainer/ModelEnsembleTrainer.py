@@ -66,7 +66,7 @@ class ModelEnsembleTrainer(Trainer):
             self.y_test.append(y_test)
 
             # fit the model
-            model = ModelsHandler.get_model(clf)
+            model = ModelsHandler().get_model(clf)
             model = model.fit(x_train_fs, y_train)
             self.models.append(model)
 
