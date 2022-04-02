@@ -9,8 +9,8 @@ class TrainersFactory:
     def __init__(self):
         self.__trainers = {
             "single_tasks": SingleModelTrainer,
-            "fusion": TaskFusionTrainer,
-            "ensemble": ModelEnsembleTrainer,
+            "data_ensemble": TaskFusionTrainer,
+            "models_ensemble": ModelEnsembleTrainer,
             "stack": StackingTrainer
         }
 

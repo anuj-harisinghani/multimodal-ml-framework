@@ -10,12 +10,13 @@ warnings.filterwarnings("ignore")
 
 
 class CrossValidator:
-    def __init__(self, mode: str, classifiers: list):
+    def __init__(self, mode: str, classifiers: list, output_folder: str):
         self.__trainer = None
         self.mode = mode
         self.seed = None
         self.classifiers = classifiers
         self.dataset_name = None
+        self.output_folder = output_folder
 
     def cross_validate(self, seed: int, tasks_data: dict):
         """
@@ -30,8 +31,8 @@ class CrossValidator:
         aggregation_method = settings['aggregation_method']
         meta_clf = settings['meta_classifier']
         prefixes = {'single_tasks': 'results_new_features',
-                    'fusion': 'results_fusion',
-                    'ensemble': 'results_ensemble'}
+                    'data_ensemble': 'results_fusion',
+                    'model_ensemble': 'results_ensemble'}
         feature_importance = False
 
         # running trainer for each of the tasks
@@ -61,7 +62,7 @@ class CrossValidator:
                                                 prefix=prefixes[self.mode], method='default', save_to_csv=True,
                                                 get_prediction=True, feature_importance=False)
 
-        elif self.mode == 'fusion' and aggregation_method == 'average':
+        elif self.mode == 'data_ensemble' and aggregation_method == 'average':
             # Data Ensemble with Late Fusion and Averaging
             trained_models = []
 
@@ -131,7 +132,7 @@ class CrossValidator:
                                         prefix=prefixes[self.mode], method=aggregation_method, save_to_csv=True,
                                         get_prediction=True, feature_importance=feature_importance)
 
-        elif self.mode == 'ensemble' and aggregation_method == 'stack':
+        elif self.mode == 'models_ensemble' and aggregation_method == 'stack':
             # Models Ensemble with stack
             final_stacked = {}
             trained_models = []
@@ -312,7 +313,7 @@ class CrossValidator:
             #                             prefix=prefixes[self.mode], method=self.mode, save_to_csv=True,
             #                             get_prediction=True, feature_importance=feature_importance)
 
-        elif self.mode == 'fusion' and aggregation_method == 'stack':
+        elif self.mode == 'data_ensemble' and aggregation_method == 'stack':
             # Data Ensemble with Late Fusion and Stacking
             # to be used to compare against Data Ensemble with Late Fusion and Averaging (Task fusion)
             # Uses TaskFusionTrainer to create classifier-level-Trainer classes, then stacks them across
@@ -412,7 +413,7 @@ class CrossValidator:
         :return: nothing
         """
 
-        agg_method = method
+        agg_method = 'webcam'
         # required values
         feat_csv_writer = None
         feat_f = None
@@ -421,8 +422,7 @@ class CrossValidator:
         pred_f = None
         feat_fold_f = None
 
-        params = ParamsHandler.load_parameters('settings')
-        output_folder = params['output_folder']
+        output_folder = ParamsHandler.name_output_folder('settings')
 
         prediction_prefix = 'predictions'
         feature_fold_prefix = 'features_fold'

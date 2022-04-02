@@ -8,17 +8,19 @@ import os
 
 class DataHandler:
 
-    def __init__(self, mode: str, output_folder: str, extraction_method: str):
-        self.mode = mode
+    def __init__(self, output_folder: str):
+        params = ParamsHandler.load_parameters('settings')
         self.output_folder = output_folder
-        self.extraction_method = extraction_method
+        print(self.output_folder)
+        self.mode = params['mode']
+        self.extraction_method = params['PID_extraction_method']
+        self.dataset_name = params['dataset']
         self.pid_file_paths = None
-        self.dataset_name = ParamsHandler.load_parameters('settings')['dataset']
 
     def load_data(self, tasks: List) -> dict:
         tasks_data = {task: None for task in tasks}
-        self.pid_file_paths = {task: os.path.join('assets', self.dataset_name, 'PIDs', self.mode + '_' +
-                                                  self.extraction_method + '_' + task + '_pids.csv') for task in tasks}
+        self.pid_file_paths = {task: os.path.join('assets', self.dataset_name, 'PIDs', '{}_{}_{}_pids.csv'.format(
+            self.mode, self.extraction_method, task)) for task in tasks}
 
         # extract PIDs
         PIDExtractor(mode=self.mode, extraction_method=self.extraction_method, output_folder=self.output_folder,
@@ -37,7 +39,6 @@ class DataHandler:
                 tasks_data[task] = modality_data
 
         return tasks_data
-
 
     @staticmethod
     def get_data(task: str, modality: str, feature_set: dict, pid_file_path: str) -> dict:
@@ -119,7 +120,7 @@ class DataHandler:
         # random sample
         dataset = dataset.sample(frac=1, random_state=10)
         
-        if dataset_name == 'canary':
+        if dataset_name == 'canary' or dataset_name == 'webcam':
             # labels
             labels = list(dataset['interview'])
 

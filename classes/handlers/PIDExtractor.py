@@ -92,7 +92,7 @@ class PIDExtractor:
                 pids_mod = [np.intersect1d(pids_mod[i], pids_mod[i+1]) for i in range(len(pids_mod) - 1)]
 
             # for fusion mode, we require a union of PIDs taken from each modality
-            elif self.mode == 'fusion' or self.mode == 'ensemble':
+            elif self.mode == 'data_ensemble' or self.mode == 'models_ensemble':
                 pids_mod = [np.union1d(pids_mod[i], pids_mod[i+1]) for i in range(len(pids_mod) - 1)]
 
         # intersecting the final list of PIDs with diagnosis, to get the PIDs with valid diagnosis
@@ -110,7 +110,7 @@ class PIDExtractor:
 
             superset_ids.append(pids)
 
-        if self.mode == 'fusion' or self.mode == 'ensemble':
+        if self.mode == 'data_ensemble' or self.mode == 'models_ensemble':
             # getting superset_ids for fusion, which are the union of all lists of PIDs taken from all tasks
             while (len(superset_ids)) > 1:
                 superset_ids = [np.union1d(superset_ids[i], superset_ids[i + 1]) for i in range(len(superset_ids) - 1)]

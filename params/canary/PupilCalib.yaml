@@ -1,17 +1,11 @@
-#modalities: {
-#  "eye": True,
-#  "speech": False,
-#  "moca": False,
-#  "multimodal": False
-#}
 modalities : ["eye"]
 # all features here
 features: {
   "eye": {
     "ET_Basic": ["ET_fixation",
-                    "ET_saccade", 
+                    "ET_saccade",
                     "ET_path",
-                    "ET_pupil"
+                    # "ET_pupil"
                    ]
          }
 }

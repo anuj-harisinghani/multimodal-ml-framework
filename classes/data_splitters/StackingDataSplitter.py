@@ -12,11 +12,11 @@ class StackingDataSplitter(DataSplitter):
     def __init__(self):
         super().__init__()
 
-    def make_splits(self, data: dict, seed: int) -> list:
+    def make_splits(self, data: dict, seed: int):
         self.random_seed = seed
         fold_data = []
         params = ParamsHandler.load_parameters("settings")
-        output_folder = params["output_folder"]
+        output_folder = params['output_folder']
         extraction_method = params["PID_extraction_method"]
         dataset_name = params["dataset"]
         tasks = params["tasks"]

@@ -51,6 +51,7 @@ class FeatureSelector:
         # making the feature_selected data
         x_train_fs = x_train[:, indices]
         x_test_fs = x_test[:, indices]
+        x_test_fs[x_test_fs == np.inf] = 0
         selected_feature_names = [feature_names[idx] for idx in indices]
 
         return x_train_fs, x_test_fs, selected_feature_names, k_range
@@ -67,7 +68,10 @@ class FeatureSelector:
     # function to get list of features to keep based on pearson correlation over a certain threshold
     def get_top_correlation_features_by_cutoff(self, x: np.ndarray, y: np.ndarray, method: str = 'pearson'):
         if method == 'pearson':
-            correlated_to_outcome = [column for column in range(x.shape[1]) if (any(np.isnan(x[:, column])) is False) and (abs(stats.pearsonr(y, x[:, column])[0]) > self.fs_outcome)]
+            # handle inf values
+            x[x == np.inf] = 0
+            correlated_to_outcome = [column for column in range(x.shape[1]) if (any(np.isnan(x[:, column])) is False)
+                                     and (abs(stats.pearsonr(x[:, column], y)[0]) > self.fs_outcome)]
             return correlated_to_outcome
         elif method == 'pointbiserial':
             return [column for column in range(x.shape[1]) if abs(stats.pointbiserialr(y, x[:, column])[0]) > self.fs_outcome]

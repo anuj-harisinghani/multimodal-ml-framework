@@ -9,7 +9,7 @@ class DataSplitter:
         self.nfolds = params['folds']
         self.method = self.mode
 
-    def make_splits(self, data: dict, seed: int) -> list:
+    def make_splits(self, data: dict, seed: int):
         """
         (abstract) make splits -> function for creating splits with the given data
         :param data: data to split into nfolds
