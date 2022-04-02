@@ -1,0 +1,4 @@
+﻿settings,model,acc,roc,f1,precision,recall,specificity
+Basic,RandomForest,0.51±0.04,0.53±0.03,0.42±0.05,0.47±0.08,0.4±0.05,0.62±0.06
+Basic,GausNaiveBayes,0.53±0.03,0.52±0.04,0.34±0.05,0.52±0.07,0.29±0.05,0.74±0.05
+Basic,LogReg,0.52±0.04,0.46±0.04,0.32±0.06,0.46±0.08,0.27±0.06,0.74±0.05
