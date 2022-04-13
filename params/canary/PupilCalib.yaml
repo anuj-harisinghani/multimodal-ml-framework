@@ -5,7 +5,7 @@ features: {
     "ET_Basic": ["ET_fixation",
                     "ET_saccade",
                     "ET_path",
-                    # "ET_pupil"
+                    "ET_pupil"
                    ]
          }
 }

@@ -70,6 +70,7 @@ class FeatureSelector:
         if method == 'pearson':
             # handle inf values
             x[x == np.inf] = 0
+            x[x == -np.inf] = 0
             correlated_to_outcome = [column for column in range(x.shape[1]) if (any(np.isnan(x[:, column])) is False)
                                      and (abs(stats.pearsonr(x[:, column], y)[0]) > self.fs_outcome)]
             return correlated_to_outcome

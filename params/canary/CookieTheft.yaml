@@ -5,7 +5,7 @@
 #  "multimodal": False
 #}
 
-modalities: ["eye", "speech"]
+modalities: ["eye"] # , "speech"]
 
 # all features here
 features: {

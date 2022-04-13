@@ -412,8 +412,8 @@ class CrossValidator:
         :param feature_importance: bool that decides if feature importance values are to be saved or not
         :return: nothing
         """
-
-        agg_method = 'webcam'
+        if self.mode == 'single_tasks':
+            agg_method = self.dataset_name
         # required values
         feat_csv_writer = None
         feat_f = None

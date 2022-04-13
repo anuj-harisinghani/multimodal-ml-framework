@@ -51,6 +51,7 @@ class DataHandler:
 
         # get pids from a saved file, which was created by get_list_of_pids based on the conditions given to it
         pids = pd.read_csv(pid_file_path)
+        print("DataHandler: found ", len(pids), " for ", task, modality)
 
         # initializing the dataset as the list of PIDs
         dataset = pids
