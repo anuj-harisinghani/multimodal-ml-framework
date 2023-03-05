@@ -1,8 +1,8 @@
 # create env:
-conda create --name canary2 python=3.8.5
+conda create --name canary python=3.8.5
 
 # activate env:
-conda activate canary2
+conda activate canary
 
 # install dependencies from requirements.txt (first go into the folder where requirements.txt is)
 pip install -r requirements.txt

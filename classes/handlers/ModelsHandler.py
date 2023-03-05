@@ -28,7 +28,7 @@ class ModelsHandler:
             elif model == 'LogReg':
                 models.append(LogisticRegression())
             elif model == 'dummy':
-                models.append(DummyClassifier())
+                models.append(DummyClassifier(strategy='most_frequent'))
             elif model == 'AdaBoost':
                 models.append(AdaBoostClassifier())
             elif model == 'Bagging':
