@@ -1,0 +1,8 @@
+fixationrate
+sumsaccadedistance
+meansaccadeduration
+stddevsaccadeduration
+longestsaccadeduration
+meansaccadespeed
+fixationsaccadetimeratio
+sink_numtransfrom_woman

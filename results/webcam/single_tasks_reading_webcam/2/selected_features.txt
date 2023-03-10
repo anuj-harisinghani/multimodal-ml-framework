@@ -1,0 +1,6 @@
+fixationrate
+sumsaccadeduration
+meansaccadeduration
+meansaccadespeed
+maxsaccadespeed
+eyemovementvelocity

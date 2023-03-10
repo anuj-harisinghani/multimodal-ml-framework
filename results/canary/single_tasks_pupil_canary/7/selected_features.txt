@@ -1,0 +1,12 @@
+numfixations
+meanfixationduration
+stddevfixationduration
+numsaccades
+sumsaccadedistance
+meansaccadedistance
+stddevsaccadedistance
+meansaccadeduration
+stddevsaccadespeed
+fixationsaccadetimeratio
+eyemovementvelocity
+sumpathdistance

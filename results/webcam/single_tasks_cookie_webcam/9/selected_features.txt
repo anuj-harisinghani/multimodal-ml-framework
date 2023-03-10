@@ -1,0 +1,5 @@
+sumsaccadedistance
+meansaccadespeed
+plate_proportionnum
+sink_numtransfrom_woman
+sink_proptransfrom_woman

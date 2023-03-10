@@ -1,0 +1,10 @@
+sumsaccadedistance
+meansaccadespeed
+stddevsaccadespeed
+fixationsaccadetimeratio
+meanabspathangles
+meanpathdistance
+meanrelpathangles
+stddevabspathangles
+stddevpathdistance
+sumpathdistance

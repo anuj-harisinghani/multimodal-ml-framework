@@ -1,0 +1,14 @@
+stddevfixationduration
+sumfixationduration
+sumsaccadedistance
+stddevsaccadedistance
+meansaccadeduration
+meansaccadespeed
+stddevsaccadespeed
+meanabspathangles
+meanpathdistance
+meanrelpathangles
+stddevabspathangles
+stddevpathdistance
+eyemovementvelocity
+sumpathdistance

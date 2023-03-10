@@ -1,0 +1,11 @@
+mean_Sacc_Dist
+count_Fix
+count_FirstPass_FirstFix
+count_LaterPass_FirstFix
+count_ReFix
+mean_FirstPass_FirstFix_Duration
+mean_Wrapup_Duration
+meanabspathangles
+eyemovementvelocity
+abspathanglesrate
+relpathanglesrate

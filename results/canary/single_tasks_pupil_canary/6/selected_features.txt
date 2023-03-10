@@ -1,0 +1,9 @@
+numfixations
+meanfixationduration
+numsaccades
+sumsaccadedistance
+meansaccadedistance
+stddevsaccadedistance
+stddevsaccadespeed
+fixationsaccadetimeratio
+sumpathdistance

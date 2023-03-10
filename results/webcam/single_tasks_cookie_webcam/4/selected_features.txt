@@ -1,0 +1,8 @@
+fixationrate
+sumsaccadedistance
+meansaccadespeed
+fixationsaccadetimeratio
+woman_numfixations
+woman_timetolastfixation
+sink_numtransfrom_woman
+dishcloth_fixationrate
